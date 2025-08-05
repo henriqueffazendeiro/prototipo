@@ -1,0 +1,2287 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Mystery Box</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Animated Top Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 32px;
+            background: #1e3a8a;
+            color: white;
+            z-index: 1001;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        .scrolling-text {
+            white-space: nowrap;
+            animation: scroll 60s linear infinite;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .desktop-text {
+            display: inline;
+        }
+        
+        .mobile-text {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .scrolling-text {
+                font-size: 12px;
+            }
+            
+            .desktop-text {
+                display: none;
+            }
+            
+            .mobile-text {
+                display: inline;
+            }
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 32px;
+            left: 0;
+            width: 100%;
+            z-index: 1002;
+            transition: all 0.3s ease;
+            padding: 15px 0;
+        }
+
+        .header.scrolled {
+            top: 0;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo img {
+            transition: height 0.3s ease;
+        }
+
+        .navbar a {
+            transition: font-size 0.3s ease;
+        }
+
+        .cart-icon svg {
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+
+        .mobile-menu {
+            transition: font-size 0.3s ease;
+        }
+
+        .header-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo img {
+            height: 28px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        .navbar a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .navbar a:hover {
+            color: #3b82f6;
+        }
+
+        .cart-icon {
+            justify-self: end;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+            color: #333;
+            border: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .cart-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .cart-icon:hover {
+            color: #1e3a8a;
+            transform: scale(1.1);
+        }
+
+        .mobile-menu {
+            display: none;
+        }
+
+        /* Cart Sidebar */
+        .cart-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .cart-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .cart-sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            z-index: 2001;
+            transition: right 0.3s ease;
+            padding: 20px;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-sidebar.active {
+            right: 0;
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 20px 10px 20px;
+            margin-left: -20px;
+            margin-right: -20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .cart-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close-cart {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .cart-content {
+            height: calc(100vh - 120px);
+            display: flex;
+            flex-direction: column;
+            color: #666;
+        }
+
+        .cart-content.empty {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .cart-items {
+            margin-bottom: 5px;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 0;
+            margin: 0;
+            padding-bottom: 120px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding: 15px 0;
+            width: 100%;
+            box-sizing: border-box;
+            height: 130px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cart-item-left {
+            display: flex;
+            align-items: stretch;
+            gap: 12px;
+            flex: none;
+            height: 100%;
+        }
+
+
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            flex: 1;
+        }
+
+
+        .cart-item-right .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
+
+        .price-info {
+            position: absolute;
+            bottom: 9px;
+            right: 5px;
+            text-align: right;
+        }
+
+        .price-row {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .original-price {
+            font-size: 14px;
+            color: #999;
+            text-decoration: line-through;
+            margin: 0;
+        }
+
+        .cart-item-right .item-price {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin: 0;
+        }
+
+        .savings {
+            font-size: 11px;
+            color: #666;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .cart-item-image {
+            width: 110px;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #666;
+            background-image: url('11.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            flex-shrink: 0;
+        }
+
+        .item-info h4 {
+            margin: 0 0 8px 0;
+            margin-top: 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+            line-height: 1.2;
+        }
+
+        .item-info p {
+            margin: 2px 0;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .item-price {
+            font-weight: 600;
+            color: #000;
+        }
+
+        .item-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: absolute;
+            bottom: 10px;
+            left: 120px;
+        }
+
+        .item-controls button {
+            width: 25px;
+            height: 25px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .item-controls button:hover {
+            background: #f5f5f5;
+        }
+
+        .remove-btn {
+            background: transparent !important;
+            border: none !important;
+            margin-left: 5px;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transform: translateY(2px);
+        }
+
+        .remove-btn img {
+            width: 24px;
+            height: 24px;
+            filter: contrast(1.5) brightness(0.8);
+        }
+
+        .cart-total {
+            padding: 15px 20px;
+            width: 100%;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: auto;
+            box-sizing: border-box;
+            position: absolute;
+            bottom: 90px;
+            background: white;
+            left: 0;
+            right: 0;
+        }
+
+        .cart-total-label {
+            color: #333;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .cart-total-amount {
+            color: #1e3a8a;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .checkout-btn {
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin-top: 15px;
+            position: absolute;
+            bottom: 50px;
+            left: 20px;
+            right: 20px;
+        }
+
+        .checkout-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .payment-methods-cart {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            right: 20px;
+        }
+
+        .payment-methods-cart svg {
+            height: 25px;
+            width: auto;
+        }
+
+        /* Mobile Menu Sidebar */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mobile-menu-sidebar {
+            position: fixed;
+            top: 0;
+            left: -400px;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            z-index: 2001;
+            transition: left 0.3s ease;
+            padding: 20px;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .mobile-menu-sidebar.active {
+            left: 0;
+        }
+
+        .menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .close-menu {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .menu-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .mobile-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .mobile-nav a {
+            color: #333;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 500;
+            padding: 10px 0;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 20px 0;
+        }
+
+        .mobile-features {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .feature-item img {
+            width: 20px;
+            height: 20px;
+            filter: brightness(0) saturate(100%) invert(42%) sepia(0%) saturate(1%) hue-rotate(257deg) brightness(100%) contrast(88%);
+        }
+
+        /* Product Section */
+        .product-section {
+            padding: 150px 0 50px;
+            background: white;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        /* Product Images Grid */
+        .product-images {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            column-gap: 15px;
+            row-gap: 0px;
+            height: fit-content;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 300px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 0px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin-bottom: -10px;
+        }
+
+        .product-image:hover {
+            transform: scale(1.05);
+        }
+
+        .product-image:nth-child(1) { background-image: url('13.png'); }
+        .product-image:nth-child(2) { background-image: url('11.png'); }
+        .product-image:nth-child(3) { background-image: url('7.png'); }
+        .product-image:nth-child(4) { background-image: url('8.png'); }
+        .product-image:nth-child(5) { background-image: url('9.png'); }
+        .product-image:nth-child(6) { background-image: url('10.png'); }
+
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: flex-start;
+            height: 890px;
+        }
+
+        /* Hide mobile layout on desktop */
+        .mobile-product-images {
+            display: none;
+        }
+
+        /* Rating Section */
+        .rating-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+
+        .stars {
+            color: #fbbf24;
+            font-size: 1.5rem;
+        }
+
+        .rating-text {
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .product-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #333;
+            margin-bottom: 5px;
+            line-height: 1.1;
+        }
+
+        .product-price {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 5px;
+        }
+
+        .price-current {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #1e3a8a;
+        }
+
+        .price-original {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: rgba(0, 0, 0, 0.6);
+            text-decoration: line-through;
+        }
+
+        .free-shipping {
+            background: none;
+            color: #333;
+            padding: 0;
+            border-radius: 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .divider {
+            width: 100%;
+            height: 1px;
+            background: #e5e7eb;
+            margin: 8px 0;
+        }
+
+        /* Features Section */
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .feature-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .feature-icon.blue-icon img {
+            filter: brightness(0) saturate(100%) invert(23%) sepia(85%) saturate(1500%) hue-rotate(214deg) brightness(95%) contrast(105%);
+        }
+
+        /* Size Selector */
+        .size-section {
+            margin-bottom: 15px;
+        }
+
+        .size-label {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .size-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .size-option {
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+
+        .size-option:hover,
+        .size-option.selected {
+            border-color: #1e3a8a;
+            background: #1e3a8a;
+            color: white;
+        }
+
+        /* Clubs Exclude Section */
+        .exclude-section {
+            margin-bottom: 15px;
+        }
+
+        .exclude-label {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .exclude-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .buy-button {
+            background: #1e3a8a;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .buy-button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .payment-methods {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .payment-methods img {
+            height: 30px;
+            object-fit: contain;
+        }
+
+        /* Shipping Info */
+        .shipping-info {
+            padding: 15px 0;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .shipping-info-vertical {
+            padding: 40px 0;
+            background: #f9fafb;
+            text-align: center;
+        }
+
+        .shipping-info-vertical .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .shipping-info-vertical .shipping-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .shipping-info-vertical .shipping-line:last-child {
+            margin-bottom: 0;
+        }
+
+        .shipping-info-vertical .shipping-line span {
+            color: #333;
+        }
+
+        .shipping-info-vertical .delivery-estimate {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .shipping-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .shipping-line:last-child {
+            margin-bottom: 0;
+        }
+
+        .delivery-estimate {
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 100px 0;
+            background: #f9fafb;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 60px;
+            font-weight: bold;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .step {
+            text-align: center;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .step-image {
+            width: 100%;
+            height: 200px;
+            background-image: url('11.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 15px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: #1e3a8a;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .step:nth-child(2) .step-image {
+            background-image: url('12.png');
+        }
+
+        .step:nth-child(3) .step-image {
+            background-image: url('13.png');
+        }
+
+        .step:nth-child(4) .step-image {
+            background-image: url('14.png');
+        }
+
+        .step h4 {
+            color: black;
+            font-weight: bold;
+            font-size: 1rem;
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+
+        .step p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Why Choose Us */
+        .why-choose-us {
+            padding: 30px 0 100px 0;
+            background: #f9fafb;
+        }
+
+        .comparison-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .text-section h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            line-height: 1.1;
+            text-align: left;
+        }
+
+        .table-headers {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1.5fr;
+            gap: 0;
+            margin-bottom: 10px;
+        }
+
+        .table-headers > div:first-child {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .header-logo, .header-outros {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1rem;
+            padding: 10px;
+        }
+
+        .header-logo {
+            color: #333;
+        }
+
+        .header-outros {
+            color: #666;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            table-layout: fixed;
+        }
+
+        .comparison-table td:first-child {
+            width: 40%;
+        }
+
+        .comparison-table td:nth-child(2),
+        .comparison-table td:nth-child(3) {
+            width: 30%;
+        }
+
+        .comparison-table td {
+            padding: 6px;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+            border-right: 1px solid #e5e7eb;
+            vertical-align: middle;
+        }
+
+        .comparison-table td:last-child {
+            border-right: none;
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comparison-table td:first-child {
+            text-align: center;
+            font-weight: 500;
+            background: #1e3a8a;
+            color: white;
+            border-bottom: 1px solid #1f3660;
+            border-right: 1px solid #1f3660;
+        }
+
+        .check {
+            color: #10b981;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .cross {
+            color: #ef4444;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .why-choose-us {
+                padding: 20px 0 40px 0;
+            }
+
+            .comparison-section {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .text-section h2 {
+                font-size: 1.5rem;
+                text-align: center;
+            }
+
+            .step-image {
+                height: 0;
+                padding-bottom: 100%;
+            }
+        }
+
+        /* Sticky Buy Bar */
+        .sticky-buy-bar {
+            position: fixed;
+            bottom: -100px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            padding: 15px 20px;
+            z-index: 1000;
+            transition: bottom 0.3s ease;
+        }
+
+        .sticky-buy-bar.visible {
+            bottom: 0;
+        }
+
+        .sticky-bar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1250px;
+            margin: 0 auto;
+        }
+
+        .sticky-product-info h3 {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 5px 0;
+        }
+
+        .sticky-price-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sticky-price-current {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+
+        .sticky-price-original {
+            font-size: 0.9rem;
+            color: #666;
+            text-decoration: line-through;
+        }
+
+        .sticky-free-shipping {
+            font-size: 0.8rem;
+            color: white;
+            font-weight: 500;
+            background: #1e3a8a;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .sticky-buy-button {
+            background: #1e3a8a;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .sticky-buy-button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .sticky-buy-bar {
+                padding: 10px 15px;
+            }
+
+            .sticky-bar-content {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                align-items: center;
+            }
+
+            .sticky-product-info h3 {
+                font-size: 0.9rem;
+                margin: 0 0 3px 0;
+                line-height: 1.2;
+            }
+
+            .sticky-price-info {
+                gap: 5px;
+                align-items: center;
+            }
+
+            .sticky-price-current {
+                font-size: 0.8rem;
+            }
+
+            .sticky-price-original {
+                font-size: 0.7rem;
+            }
+
+            .sticky-free-shipping {
+                font-size: 0.6rem;
+                padding: 1px 4px;
+            }
+
+            .sticky-buy-button {
+                padding: 12px 15px;
+                font-size: 0.8rem;
+                margin-left: 10px;
+            }
+        }
+
+        /* Footer */
+        .footer {
+            background: #111827;
+            color: white;
+            padding: 30px 0;
+        }
+
+        .footer-content {
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .footer-divider {
+            width: 100%;
+            height: 1px;
+            background: #666;
+            margin: 0 0 30px 0;
+        }
+
+        .footer-logo {
+            height: 35px;
+            margin-bottom: 15px;
+        }
+
+        .footer-links {
+            margin-bottom: 15px;
+        }
+
+        .footer-links a {
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .separator {
+            margin: 0 10px;
+            color: #666;
+        }
+
+        .footer-payment {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .footer-copyright {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .header.scrolled {
+                padding: 8px 0;
+            }
+
+            .header.scrolled .logo img {
+                height: 20px;
+            }
+
+            .header.scrolled .cart-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .header.scrolled .mobile-menu {
+                font-size: 16px;
+            }
+            .header-content {
+                grid-template-columns: auto 1fr auto;
+                gap: 15px;
+            }
+
+            .logo {
+                order: 2;
+                justify-self: center;
+            }
+
+            .mobile-menu {
+                display: block;
+                order: 1;
+                background: none;
+                border: none;
+                font-size: 20px;
+                cursor: pointer;
+                color: #333;
+            }
+
+            .navbar {
+                display: none;
+            }
+
+            .cart-icon {
+                order: 3;
+                width: 40px;
+                height: 40px;
+            }
+
+            .cart-sidebar {
+                width: 90% !important;
+                right: -90% !important;
+            }
+            
+            .cart-sidebar.active {
+                right: 0% !important;
+            }
+
+            .cart-item {
+                height: auto !important;
+                min-height: 100px !important;
+                padding: 8px 0 !important;
+                justify-content: flex-start !important;
+            }
+
+            .cart-item-image {
+                width: 80px !important;
+                height: 80px !important;
+                aspect-ratio: 1/1 !important;
+                background-size: 70px 70px !important;
+                background-position: center center !important;
+                background-repeat: no-repeat !important;
+                overflow: hidden !important;
+                flex-shrink: 0 !important;
+            }
+
+            .cart-item-left {
+                gap: 8px !important;
+            }
+
+            .item-info {
+                justify-content: space-between !important;
+                position: relative !important;
+            }
+            .item-info h4 {
+                font-size: 14px !important;
+                margin-bottom: 4px !important;
+                line-height: 1.1 !important;
+                transform: translateY(2px) !important;
+            }
+
+            .item-info p {
+                font-size: 10px !important;
+                margin: 1px 0 !important;
+            }
+            .price-section {
+                margin-top: auto !important;
+                margin-bottom: 25px !important;
+                transform: translateY(-4px) !important;
+            }
+            .item-price {
+                display: flex !important;
+                align-items: center !important;
+                gap: 5px !important;
+                margin: 0 !important;
+            }
+            .savings {
+                margin: -2px 0 0 0 !important;
+            }
+            .price-row {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+            }
+
+            .cart-item {
+                position: relative !important;
+                min-height: 100px !important;
+            }
+            .item-controls {
+                position: absolute !important;
+                bottom: 15px !important;
+                left: 90px !important;
+                margin: 0 !important;
+            }
+
+            .item-controls button {
+                width: 20px !important;
+                height: 20px !important;
+                font-size: 10px !important;
+            }
+
+            .item-controls span {
+                font-size: 11px !important;
+                min-width: 15px !important;
+                text-align: center !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            .cart-item-right .remove-btn {
+                top: 7px !important;
+                right: 3px !important;
+            }
+
+            .price-info {
+                margin-top: -3px !important;
+                bottom: 14px !important;
+            }
+
+            .original-price {
+                font-size: 10px !important;
+            }
+
+            .cart-item-right .item-price {
+                font-size: 13px !important;
+            }
+
+            .savings {
+                font-size: 9px !important;
+            }
+            
+            .mobile-menu-sidebar {
+                width: 80% !important;
+                left: -80% !important;
+            }
+            
+            .mobile-menu-sidebar.active {
+                left: 0% !important;
+            }
+
+            .product-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .product-images {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .product-image {
+                height: 150px;
+            }
+
+            .product-title {
+                font-size: 1.5rem;
+            }
+
+            .price-current {
+                font-size: 1.4rem;
+            }
+
+            .price-original {
+                font-size: 1rem;
+            }
+
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-info {
+                height: auto !important;
+            }
+
+            .shipping-info {
+                margin-top: 15px !important;
+                padding-top: 0 !important;
+                border-top: none !important;
+                text-align: center !important;
+            }
+
+            .shipping-info .shipping-line {
+                justify-content: center !important;
+            }
+
+            .product-info div[style*="flex-grow"] {
+                display: none !important;
+            }
+
+            .product-section {
+                padding: 90px 0 30px !important;
+            }
+
+            .how-it-works {
+                padding: 40px 0 !important;
+            }
+            
+            .why-choose-us {
+                padding: 15px 0 100px 0 !important;
+            }
+
+            /* Mobile Product Images */
+            .mobile-product-images {
+                display: block !important;
+            }
+
+            .product-images {
+                display: none !important;
+            }
+
+            .main-image-container {
+                margin: 7px -20px 10px -20px;
+            }
+
+            .main-product-image {
+                width: 100vw;
+                margin-left: calc(-50vw + 50%);
+                aspect-ratio: 1;
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                transition: background-image 0.3s ease;
+            }
+
+            .carousel-container {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                position: relative;
+                margin: 0 -20px;
+                padding: 0 20px;
+            }
+
+            .carousel-nav {
+                background: transparent;
+                color: #888;
+                border: none;
+                width: 30px;
+                height: 30px;
+                font-size: 18px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                transition: all 0.3s ease;
+                position: absolute;
+                z-index: 10;
+            }
+
+            .carousel-nav.left {
+                left: 0;
+            }
+
+            .carousel-nav.right {
+                right: 0;
+            }
+
+            .carousel-nav:hover {
+                color: #555;
+                transform: scale(1.1);
+            }
+
+            .carousel-wrapper {
+                flex: 1;
+                overflow-x: hidden;
+                overflow-y: visible;
+                padding: 2px 2px 4px 2px;
+            }
+
+            .carousel-track {
+                display: flex;
+                transition: transform 0.3s ease;
+                gap: 5px;
+            }
+
+            .carousel-item {
+                width: calc(25% - 3.75px);
+                aspect-ratio: 1;
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                flex-shrink: 0;
+                border: 1px solid transparent;
+                box-sizing: border-box;
+                position: relative;
+            }
+
+            .carousel-item:hover {
+                transform: scale(1.05);
+                z-index: 5;
+            }
+
+            .carousel-item.active {
+                border: 1px solid #000 !important;
+                transform: scale(1.05);
+                z-index: 6;
+                position: relative;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Top Bar -->
+    <div class="top-bar">
+        <div class="scrolling-text">
+<span class="desktop-text">ENTREGAS EM 48H&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRODUTOS AUTÊNTICOS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENVIO GRÁTIS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENTREGAS EM 48H&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRODUTOS AUTÊNTICOS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENVIO GRÁTIS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="mobile-text">ENTREGAS EM 48H&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRODUTOS AUTÊNTICOS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENVIO GRÁTIS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENTREGAS EM 48H&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRODUTOS AUTÊNTICOS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENVIO GRÁTIS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="container">
+            <div class="header-content">
+                <button class="mobile-menu" onclick="showMobileMenu()">☰</button>
+                <a href="index.html" class="logo">
+                    <img src="logo.png" alt="Protótipo">
+                </a>
+                <nav class="navbar">
+                    <a href="index.html#mystery-boxes">Mystery Boxes</a>
+                    <a href="index.html#instagram-section">Sobre Nós</a>
+                    <a href="index.html#contact">Contacto</a>
+                </nav>
+                <button class="cart-icon" onclick="toggleCart()">
+                    <svg width="16" height="16" viewBox="0 0 1664 1280" fill="currentColor">
+                        <path d="M640 1280q0 52-38 90t-90 38t-90-38t-38-90t38-90t90-38t90 38t38 90m896 0q0 52-38 90t-90 38t-90-38t-38-90t38-90t90-38t90 38t38 90m128-1088v512q0 24-16.5 42.5T1607 768L563 890q13 60 13 70q0 16-24 64h920q26 0 45 19t19 45t-19 45t-45 19H448q-26 0-45-19t-19-45q0-11 8-31.5t16-36t21.5-40T445 951L268 128H64q-26 0-45-19T0 64t19-45T64 0h256q16 0 28.5 6.5T368 22t13 24.5t8 26t5.5 29.5t4.5 26h1201q26 0 45 19t19 45"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>O teu carrinho</h3>
+            <button class="close-cart" onclick="toggleCart()">×</button>
+        </div>
+        <div class="cart-content">
+            <p>O seu carrinho está vazio</p>
+            <button class="checkout-btn">Finalizar Compra</button>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Sidebar -->
+    <div class="menu-overlay" id="menuOverlay" onclick="toggleMobileMenu()"></div>
+    <div class="mobile-menu-sidebar" id="mobileSidebar">
+        <div class="menu-header">
+            <h3>Menu</h3>
+            <button class="close-menu" onclick="toggleMobileMenu()">×</button>
+        </div>
+        <div class="menu-content">
+            <nav class="mobile-nav">
+                <a href="index.html#mystery-boxes" onclick="toggleMobileMenu()">Mystery Boxes</a>
+                <a href="index.html#instagram-section" onclick="toggleMobileMenu()">Sobre Nós</a>
+                <a href="index.html#contact" onclick="toggleMobileMenu()">Contacto</a>
+            </nav>
+            <div class="menu-divider"></div>
+            <div class="mobile-features">
+                <div class="feature-item">
+                    <img src="local_shipping.svg" alt="Entregas">
+                    <span>Entregas em 48h</span>
+                </div>
+                <div class="feature-item">
+                    <img src="check_circle.svg" alt="Produtos oficiais">
+                    <span>Produtos oficiais</span>
+                </div>
+                <div class="feature-item">
+                    <img src="package_2.svg" alt="Envio grátis">
+                    <span>Envio grátis</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Section -->
+    <section class="product-section">
+        <div class="container">
+            <div class="product-grid">
+                <!-- Product Images Grid (Left Side) -->
+                <div class="product-images">
+                    <div class="product-image" data-image="13.png"></div>
+                    <div class="product-image" data-image="11.png"></div>
+                    <div class="product-image" data-image="7.png"></div>
+                    <div class="product-image" data-image="8.png"></div>
+                    <div class="product-image" data-image="9.png"></div>
+                    <div class="product-image" data-image="10.png"></div>
+                </div>
+
+                <!-- Mobile Product Images Layout -->
+                <div class="mobile-product-images">
+                    <!-- Main Image -->
+                    <div class="main-image-container">
+                        <div class="main-product-image" id="mainImage" style="background-image: url('13.png');"></div>
+                    </div>
+                    
+                    <!-- Carousel -->
+                    <div class="carousel-container">
+                        <button class="carousel-nav left" onclick="moveCarousel(2)">‹</button>
+                        <div class="carousel-wrapper">
+                            <div class="carousel-track" id="carouselTrack">
+                                <div class="carousel-item active" onclick="changeMainImage('13.png', this)" style="background-image: url('13.png');"></div>
+                                <div class="carousel-item" onclick="changeMainImage('11.png', this)" style="background-image: url('11.png');"></div>
+                                <div class="carousel-item" onclick="changeMainImage('7.png', this)" style="background-image: url('7.png');"></div>
+                                <div class="carousel-item" onclick="changeMainImage('8.png', this)" style="background-image: url('8.png');"></div>
+                                <div class="carousel-item" onclick="changeMainImage('9.png', this)" style="background-image: url('9.png');"></div>
+                                <div class="carousel-item" onclick="changeMainImage('10.png', this)" style="background-image: url('10.png');"></div>
+                            </div>
+                        </div>
+                        <button class="carousel-nav right" onclick="moveCarousel(-2)">›</button>
+                    </div>
+                </div>
+
+                <!-- Product Info (Right Side) -->
+                <div class="product-info">
+                    <!-- Rating Section -->
+                    <div class="rating-section">
+                        <div class="stars">★★★★☆</div>
+                        <span class="rating-text">4.8 (1254 Reviews)</span>
+                    </div>
+
+                    <!-- Product Title -->
+                    <h1 id="product-title" class="product-title">Mystery Box</h1>
+
+                    <!-- Product Price -->
+                    <div class="product-price">
+                        <span class="price-current">€41,99</span>
+                        <span class="price-original">€81,99</span>
+                        <span class="free-shipping">+Envio grátis!</span>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Features -->
+                    <div class="features">
+                        <div class="feature">
+                            <div class="feature-icon">
+                                <img src="https://cdn.shopify.com/s/files/1/0866/9472/3912/files/CTT-Logo-20080409.png?v=1751122321" alt="CTT Logo">
+                            </div>
+                            <span><strong>CTT</strong> | Entregas em 48h</span>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon blue-icon">
+                                <img src="https://cdn.shopify.com/s/files/1/0866/9472/3912/files/redo_24dp_EA5C10_FILL0_wght400_GRAD0_opsz24.svg?v=1751123234" alt="Trocas">
+                            </div>
+                            <span><strong>Trocas</strong> | Trocas Grátis</span>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon blue-icon">
+                                <img src="https://cdn.shopify.com/s/files/1/0866/9472/3912/files/verified_24dp_EA5C10_FILL0_wght400_GRAD0_opsz24.png?v=1751126235" alt="Autêntico">
+                            </div>
+                            <span><strong>Autêntico</strong> | Produtos 100% autênticos</span>
+                        </div>
+                    </div>
+
+                    <!-- Size Selection -->
+                    <div class="size-section">
+                        <label class="size-label">TAMANHOS</label>
+                        <div class="size-options">
+                            <div class="size-option selected" onclick="selectSize(this)">S</div>
+                            <div class="size-option" onclick="selectSize(this)">M</div>
+                            <div class="size-option" onclick="selectSize(this)">L</div>
+                            <div class="size-option" onclick="selectSize(this)">XL</div>
+                            <div class="size-option" onclick="selectSize(this)">XXL</div>
+                            <div class="size-option" onclick="selectSize(this)">3XL</div>
+                        </div>
+                    </div>
+
+                    <!-- Exclude Clubs -->
+                    <div class="exclude-section">
+                        <label class="exclude-label">Escolhe até 5 clubes para NÃO receberes:</label>
+                        <input type="text" class="exclude-input" placeholder="Ex: Real Madrid, Barcelona, PSG..." maxlength="100">
+                    </div>
+
+                    <!-- Buy Button -->
+                    <button class="buy-button" onclick="addToCart()">Adicionar ao Carrinho</button>
+
+                    <!-- Payment Methods -->
+                    <div class="payment-methods">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="30" width="50" viewBox="-74.7 -40.204 647.4 241.224" style="margin-left: 10px;"><defs><linearGradient x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="scale(89.72793 -89.72793) rotate(-20.218 .966 -.457)" spreadMethod="pad" id="b"><stop offset="0" stop-color="#222357"/><stop offset="1" stop-color="#254aa5"/></linearGradient><clipPath clipPathUnits="userSpaceOnUse" id="a"><path d="M413.742 90.435c-.057-4.494 4.005-7.002 7.065-8.493 3.144-1.53 4.2-2.511 4.188-3.879-.024-2.094-2.508-3.018-4.833-3.054-4.056-.063-6.414 1.095-8.289 1.971l-1.461-6.837c1.881-.867 5.364-1.623 8.976-1.656 8.478 0 14.025 4.185 14.055 10.674.033 8.235-11.391 8.691-11.313 12.372.027 1.116 1.092 2.307 3.426 2.61 1.155.153 4.344.27 7.959-1.395l1.419 6.615c-1.944.708-4.443 1.386-7.554 1.386-7.98 0-13.593-4.242-13.638-10.314m34.827 9.744c-1.548 0-2.853-.903-3.435-2.289l-12.111-28.917h8.472l1.686 4.659h10.353l.978-4.659h7.467l-6.516 31.206h-6.894m1.185-8.43l2.445-11.718h-6.696l4.251 11.718m-46.284 8.43l-6.678-31.206h8.073l6.675 31.206h-8.07m-11.943 0l-8.403-21.24-3.399 18.06c-.399 2.016-1.974 3.18-3.723 3.18h-13.737l-.192-.906c2.82-.612 6.024-1.599 7.965-2.655 1.188-.645 1.527-1.209 1.917-2.742l6.438-24.903h8.532l13.08 31.206h-8.478"/></clipPath></defs><g clip-path="url(#a)" transform="matrix(4.98469 0 0 -4.98469 -1804.82 502.202)"><path d="M0 0l98.437 36.252 22.394-60.809-98.436-36.252" fill="url(#b)" transform="translate(351.611 96.896)"/></g></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" height="30" width="50" viewBox="-96 -98.908 832 593.448" style="margin-left: 10px;"><defs><style type="text/css">.e{fill:#f79e1b}</style></defs><path display="inline" fill="#ff5f00" stroke-width="5.494" d="M224.833 42.298h190.416v311.005H224.833z"/><path d="M244.446 197.828a197.448 197.448 0 0175.54-155.475 197.777 197.777 0 100 311.004 197.448 197.448 0 01-75.54-155.53z" fill="#eb001b" stroke-width="5.494"/><path d="M621.101 320.394v-6.372h2.747v-1.319h-6.537v1.319h2.582v6.373zm12.691 0v-7.69h-1.978l-2.307 5.493-2.308-5.494h-1.977v7.691h1.428v-5.823l2.143 5h1.483l2.143-5v5.823z" class="e" fill="#f79e1b" stroke-width="5.494"/><path d="M640 197.828a197.777 197.777 0 01-320.015 155.474 197.777 197.777 0 000-311.004A197.777 197.777 0 01640 197.773z" class="e" fill="#f79e1b" stroke-width="5.494"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" height="30" width="50" viewBox="-76.79115 -52.55 665.5233 315.3" style="margin-left: 10px;"><path d="M93.541 27.1c-6 7.1-15.6 12.7-25.2 11.9-1.2-9.6 3.5-19.8 9-26.1 6-7.3 16.5-12.5 25-12.9 1 10-2.9 19.8-8.8 27.1m8.7 13.8c-13.9-.8-25.8 7.9-32.4 7.9-6.7 0-16.8-7.5-27.8-7.3-14.3.2-27.6 8.3-34.9 21.2-15 25.8-3.9 64 10.6 85 7.1 10.4 15.6 21.8 26.8 21.4 10.6-.4 14.8-6.9 27.6-6.9 12.9 0 16.6 6.9 27.8 6.7 11.6-.2 18.9-10.4 26-20.8 8.1-11.8 11.4-23.3 11.6-23.9-.2-.2-22.4-8.7-22.6-34.3-.2-21.4 17.5-31.6 18.3-32.2-10-14.8-25.6-16.4-31-16.8m80.3-29v155.9h24.2v-53.3h33.5c30.6 0 52.1-21 52.1-51.4s-21.1-51.2-51.3-51.2zm24.2 20.4h27.9c21 0 33 11.2 33 30.9s-12 31-33.1 31h-27.8zm129.8 136.7c15.2 0 29.3-7.7 35.7-19.9h.5v18.7h22.4V90.2c0-22.5-18-37-45.7-37-25.7 0-44.7 14.7-45.4 34.9h21.8c1.8-9.6 10.7-15.9 22.9-15.9 14.8 0 23.1 6.9 23.1 19.6v8.6l-30.2 1.8c-28.1 1.7-43.3 13.2-43.3 33.2 0 20.2 15.7 33.6 38.2 33.6zm6.5-18.5c-12.9 0-21.1-6.2-21.1-15.7 0-9.8 7.9-15.5 23-16.4l26.9-1.7v8.8c0 14.6-12.4 25-28.8 25zm82 59.7c23.6 0 34.7-9 44.4-36.3l42.5-119.2h-24.6l-28.5 92.1h-.5l-28.5-92.1h-25.3l41 113.5-2.2 6.9c-3.7 11.7-9.7 16.2-20.4 16.2-1.9 0-5.6-.2-7.1-.4v18.7c1.4.4 7.4.6 9.2.6z"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" height="30" width="50" class="main-header__logo-image" fill="#A1A1A1" viewBox="-65.39955 -43.28375 566.7961 259.7025" style="margin-left: 10px;"><path fill="#5f6368" d="M206.197 84.585v50.75h-16.1V10.005h42.7a38.61 38.61 0 0127.65 10.85 34.88 34.88 0 0111.55 26.45 34.72 34.72 0 01-11.55 26.6q-11.2 10.68-27.65 10.67h-26.6zm0-59.15v43.75h27a21.28 21.28 0 0015.93-6.48 21.36 21.36 0 000-30.63 21 21 0 00-15.93-6.65h-27zm102.9 21.35q17.85 0 28.18 9.54 10.33 9.54 10.32 26.16v52.85h-15.4v-11.9h-.7q-10 14.7-26.6 14.7-14.17 0-23.71-8.4a26.82 26.82 0 01-9.54-21q0-13.31 10.06-21.17 10.06-7.86 26.86-7.88q14.34 0 23.62 5.25v-3.68a18.33 18.33 0 00-6.65-14.25 22.8 22.8 0 00-15.54-5.87q-13.49 0-21.35 11.38l-14.18-8.93q11.7-16.8 34.63-16.8zm-20.83 62.3a12.86 12.86 0 005.34 10.5 19.64 19.64 0 0012.51 4.2 25.67 25.67 0 0018.11-7.52q8-7.53 8-17.67-7.53-6-21-6-9.81 0-16.36 4.73c-4.41 3.2-6.6 7.09-6.6 11.76zm147.73-59.5l-53.76 123.55h-16.62l19.95-43.23-35.35-80.32h17.5l25.55 61.6h.35l24.85-61.6z"/><path fill="#4285f4" d="M141.137 73.645a85.79 85.79 0 00-1.24-14.64h-67.9v27.73h38.89a33.33 33.33 0 01-14.38 21.88v18h23.21c13.59-12.53 21.42-31.06 21.42-52.97z"/><path fill="#34a853" d="M71.997 144.005c19.43 0 35.79-6.38 47.72-17.38l-23.21-18c-6.46 4.38-14.78 6.88-24.51 6.88-18.78 0-34.72-12.66-40.42-29.72H7.667v18.55a72 72 0 0064.33 39.67z"/><path fill="#fbbc04" d="M31.577 85.785a43.14 43.14 0 010-27.56v-18.55H7.667a72 72 0 000 64.66z"/><path fill="#ea4335" d="M71.997 28.505a39.09 39.09 0 0127.62 10.8l20.55-20.55A69.18 69.18 0 0071.997.005a72 72 0 00-64.33 39.67l23.91 18.55c5.7-17.06 21.64-29.72 40.42-29.72z"/></svg>
+                    </div>
+
+                    <!-- Spacer to push shipping info to bottom -->
+                    <div style="flex-grow: 1;"></div>
+
+                    <!-- Shipping Info -->
+                    <div class="shipping-info" style="margin-top: auto; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                        <div class="shipping-line">
+                            <span>🇵🇹</span>
+                            <span>Envio grátis para Portugal</span>
+                        </div>
+                        <div class="shipping-line">
+                            <img src="https://cdn-icons-png.flaticon.com/512/1882/1882190.png" alt="Camião" style="width: 20px; height: 20px;">
+                            <span class="delivery-estimate">ENTREGA ESTIMADA: <span id="deliveryDate"></span></span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">Como Funciona?</h2>
+            <div class="steps-grid">
+                <div class="step">
+                    <div class="step-image">
+                        <div class="step-number">1</div>
+                    </div>
+                    <h4>Escolhe a tua Mystery Box:</h4>
+                    <p>Escolhe uma das nossas caixas mistério entre as várias opções disponíveis.</p>
+                </div>
+                <div class="step">
+                    <div class="step-image">
+                        <div class="step-number">2</div>
+                    </div>
+                    <h4>Escolhe o teu tamanho:</h4>
+                    <p>Desde o XS até ao 3XL. Recomendamos que escolhas o tamanho que costumas usar em t-shirts normalmente.</p>
+                </div>
+                <div class="step">
+                    <div class="step-image">
+                        <div class="step-number">3</div>
+                    </div>
+                    <h4>O que queres evitar?</h4>
+                    <p>Diz-nos na caixa de texto fornecida quais os clubes, ligas ou cores que não queres que saiam na tua caixa.</p>
+                </div>
+                <div class="step">
+                    <div class="step-image">
+                        <div class="step-number">4</div>
+                    </div>
+                    <h4>Recebe a tua encomenda:</h4>
+                    <p>Enviamos rapidamente para toda a Europa.<br>Portugal: 48h | Europa: 1 a 5 dias</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Us -->
+    <section class="why-choose-us">
+        <div class="container">
+            <div class="comparison-section">
+                <div class="text-section">
+                    <h2>Somos a melhor escolha!</h2>
+                </div>
+                <div class="table-section">
+                    <div class="table-headers">
+                        <div></div>
+                        <div class="header-logo"><img src="logo.png" alt="Logo" style="height: 15px; margin-top: 10px;"></div>
+                        <div class="header-outros">Outros</div>
+                    </div>
+                    <table class="comparison-table">
+                        <tbody>
+                            <tr>
+                                <td>Artigos oficiais</td>
+                                <td><span class="check">✓</span></td>
+                                <td><span class="cross">✗</span></td>
+                            </tr>
+                            <tr>
+                                <td>Envio em 48h</td>
+                                <td><span class="check">✓</span></td>
+                                <td><span class="cross">✗</span></td>
+                            </tr>
+                            <tr>
+                                <td>Trocas grátis</td>
+                                <td><span class="check">✓</span></td>
+                                <td><span class="cross">✗</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="footer-divider"></div>
+        <div class="container">
+            <div class="footer-content">
+                <img src="logo2.png" alt="Protótipo" class="footer-logo">
+                <div class="footer-links">
+                    <a href="mailto:info@prototipo.pt">info@prototipo.pt</a>
+                    <span class="separator">•</span>
+                    <a href="#">Política de Privacidade</a>
+                    <span class="separator">•</span>
+                    <a href="#">Termos e Condições</a>
+                </div>
+                <div class="footer-payment">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="25" width="40" viewBox="-74.7 -40.204 647.4 241.224"><defs><linearGradient x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="scale(89.72793 -89.72793) rotate(-20.218 .966 -.457)" spreadMethod="pad" id="b"><stop offset="0" stop-color="#222357"/><stop offset="1" stop-color="#254aa5"/></linearGradient><clipPath clipPathUnits="userSpaceOnUse" id="a"><path d="M413.742 90.435c-.057-4.494 4.005-7.002 7.065-8.493 3.144-1.53 4.2-2.511 4.188-3.879-.024-2.094-2.508-3.018-4.833-3.054-4.056-.063-6.414 1.095-8.289 1.971l-1.461-6.837c1.881-.867 5.364-1.623 8.976-1.656 8.478 0 14.025 4.185 14.055 10.674.033 8.235-11.391 8.691-11.313 12.372.027 1.116 1.092 2.307 3.426 2.61 1.155.153 4.344.27 7.959-1.395l1.419 6.615c-1.944.708-4.443 1.386-7.554 1.386-7.98 0-13.593-4.242-13.638-10.314m34.827 9.744c-1.548 0-2.853-.903-3.435-2.289l-12.111-28.917h8.472l1.686 4.659h10.353l.978-4.659h7.467l-6.516 31.206h-6.894m1.185-8.43l2.445-11.718h-6.696l4.251 11.718m-46.284 8.43l-6.678-31.206h8.073l6.675 31.206h-8.07m-11.943 0l-8.403-21.24-3.399 18.06c-.399 2.016-1.974 3.18-3.723 3.18h-13.737l-.192-.906c2.82-.612 6.024-1.599 7.965-2.655 1.188-.645 1.527-1.209 1.917-2.742l6.438-24.903h8.532l13.08 31.206h-8.478"/></clipPath></defs><g clip-path="url(#a)" transform="matrix(4.98469 0 0 -4.98469 -1804.82 502.202)"><path d="M0 0l98.437 36.252 22.394-60.809-98.436-36.252" fill="url(#b)" transform="translate(351.611 96.896)"/></g></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="25" width="40" viewBox="-96 -98.908 832 593.448"><defs><style type="text/css">.e{fill:#f79e1b}</style></defs><path display="inline" fill="#ff5f00" stroke-width="5.494" d="M224.833 42.298h190.416v311.005H224.833z"/><path d="M244.446 197.828a197.448 197.448 0 0175.54-155.475 197.777 197.777 0 100 311.004 197.448 197.448 0 01-75.54-155.53z" fill="#eb001b" stroke-width="5.494"/><path d="M621.101 320.394v-6.372h2.747v-1.319h-6.537v1.319h2.582v6.373zm12.691 0v-7.69h-1.978l-2.307 5.493-2.308-5.494h-1.977v7.691h1.428v-5.823l2.143 5h1.483l2.143-5v5.823z" class="e" fill="#f79e1b" stroke-width="5.494"/><path d="M640 197.828a197.777 197.777 0 01-320.015 155.474 197.777 197.777 0 000-311.004A197.777 197.777 0 01640 197.773z" class="e" fill="#f79e1b" stroke-width="5.494"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="25" width="40" viewBox="-76.79115 -52.55 665.5233 315.3"><path d="M93.541 27.1c-6 7.1-15.6 12.7-25.2 11.9-1.2-9.6 3.5-19.8 9-26.1 6-7.3 16.5-12.5 25-12.9 1 10-2.9 19.8-8.8 27.1m8.7 13.8c-13.9-.8-25.8 7.9-32.4 7.9-6.7 0-16.8-7.5-27.8-7.3-14.3.2-27.6 8.3-34.9 21.2-15 25.8-3.9 64 10.6 85 7.1 10.4 15.6 21.8 26.8 21.4 10.6-.4 14.8-6.9 27.6-6.9 12.9 0 16.6 6.9 27.8 6.7 11.6-.2 18.9-10.4 26-20.8 8.1-11.8 11.4-23.3 11.6-23.9-.2-.2-22.4-8.7-22.6-34.3-.2-21.4 17.5-31.6 18.3-32.2-10-14.8-25.6-16.4-31-16.8m80.3-29v155.9h24.2v-53.3h33.5c30.6 0 52.1-21 52.1-51.4s-21.1-51.2-51.3-51.2zm24.2 20.4h27.9c21 0 33 11.2 33 30.9s-12 31-33.1 31h-27.8zm129.8 136.7c15.2 0 29.3-7.7 35.7-19.9h.5v18.7h22.4V90.2c0-22.5-18-37-45.7-37-25.7 0-44.7 14.7-45.4 34.9h21.8c1.8-9.6 10.7-15.9 22.9-15.9 14.8 0 23.1 6.9 23.1 19.6v8.6l-30.2 1.8c-28.1 1.7-43.3 13.2-43.3 33.2 0 20.2 15.7 33.6 38.2 33.6zm6.5-18.5c-12.9 0-21.1-6.2-21.1-15.7 0-9.8 7.9-15.5 23-16.4l26.9-1.7v8.8c0 14.6-12.4 25-28.8 25zm82 59.7c23.6 0 34.7-9 44.4-36.3l42.5-119.2h-24.6l-28.5 92.1h-.5l-28.5-92.1h-25.3l41 113.5-2.2 6.9c-3.7 11.7-9.7 16.2-20.4 16.2-1.9 0-5.6-.2-7.1-.4v18.7c1.4.4 7.4.6 9.2.6z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="25" width="40" class="main-header__logo-image" fill="#A1A1A1" viewBox="-65.39955 -43.28375 566.7961 259.7025"><path fill="#5f6368" d="M206.197 84.585v50.75h-16.1V10.005h42.7a38.61 38.61 0 0127.65 10.85 34.88 34.88 0 0111.55 26.45 34.72 34.72 0 01-11.55 26.6q-11.2 10.68-27.65 10.67h-26.6zm0-59.15v43.75h27a21.28 21.28 0 0015.93-6.48 21.36 21.36 0 000-30.63 21 21 0 00-15.93-6.65h-27zm102.9 21.35q17.85 0 28.18 9.54 10.33 9.54 10.32 26.16v52.85h-15.4v-11.9h-.7q-10 14.7-26.6 14.7-14.17 0-23.71-8.4a26.82 26.82 0 01-9.54-21q0-13.31 10.06-21.17 10.06-7.86 26.86-7.88 14.34 0 23.62 5.25v-3.68a18.33 18.33 0 00-6.65-14.25 22.8 22.8 0 00-15.54-5.87q-13.49 0-21.35 11.38l-14.18-8.93q11.7-16.8 34.63-16.8zm-20.83 62.3a12.86 12.86 0 005.34 10.5 19.64 19.64 0 0012.51 4.2 25.67 25.67 0 0018.11-7.52q8-7.53 8-17.67-7.53-6-21-6-9.81 0-16.36 4.73c-4.41 3.2-6.6 7.09-6.6 11.76zm147.73-59.5l-53.76 123.55h-16.62l19.95-43.23-35.35-80.32h17.5l25.55 61.6h.35l24.85-61.6z"/><path fill="#4285f4" d="M141.137 73.645a85.79 85.79 0 00-1.24-14.64h-67.9v27.73h38.89a33.33 33.33 0 01-14.38 21.88v18h23.21c13.59-12.53 21.42-31.06 21.42-52.97z"/><path fill="#34a853" d="M71.997 144.005c19.43 0 35.79-6.38 47.72-17.38l-23.21-18c-6.46 4.38-14.78 6.88-24.51 6.88-18.78 0-34.72-12.66-40.42-29.72H7.667v18.55a72 72 0 0064.33 39.67z"/><path fill="#fbbc04" d="M31.577 85.785a43.14 43.14 0 010-27.56v-18.55H7.667a72 72 0 000 64.66z"/><path fill="#ea4335" d="M71.997 28.505a39.09 39.09 0 0127.62 10.8l20.55-20.55A69.18 69.18 0 0071.997.005a72 72 0 00-64.33 39.67l23.91 18.55c5.7-17.06 21.64-29.72 40.42-29.72z"/></svg>
+                </div>
+                <p class="footer-copyright">&copy; 2025 Protótipo. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Sticky Buy Bar -->
+    <div class="sticky-buy-bar" id="stickyBuyBar">
+        <div class="sticky-bar-content">
+            <div class="sticky-product-info">
+                <h3>Mystery Box - Camisolas de Jogo</h3>
+                <div class="sticky-price-info">
+                    <span class="sticky-price-current">€41,99</span>
+                    <span class="sticky-price-original">€81,99</span>
+                    <span class="sticky-free-shipping">POUPA €40</span>
+                </div>
+            </div>
+            <button class="sticky-buy-button" onclick="scrollToBuyButton()">COMPRAR JÁ</button>
+        </div>
+    </div>
+
+    <script>
+        // Cart functionality
+        let cart = JSON.parse(localStorage.getItem('mysterykit-cart')) || [];
+
+        // Header scroll effect
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+
+            // Sticky buy bar effect
+            const howItWorksSection = document.querySelector('.how-it-works');
+            const stickyBuyBar = document.getElementById('stickyBuyBar');
+            
+            if (howItWorksSection && stickyBuyBar) {
+                const howItWorksTop = howItWorksSection.offsetTop;
+                const scrollPosition = window.scrollY;
+                const windowHeight = window.innerHeight;
+                
+                // Different behavior for mobile vs desktop
+                const isMobile = window.innerWidth <= 768;
+                const triggerOffset = isMobile ? 0 : 500;
+                
+                // Check if user reached bottom of page (can't scroll more)
+                const documentHeight = document.documentElement.scrollHeight;
+                const reachedBottom = (scrollPosition + windowHeight) >= (documentHeight - 10);
+                
+                if (scrollPosition >= howItWorksTop - triggerOffset && !reachedBottom) {
+                    stickyBuyBar.classList.add('visible');
+                } else {
+                    stickyBuyBar.classList.remove('visible');
+                }
+            }
+        });
+
+        // Scroll to buy button function
+        function scrollToBuyButton() {
+            const buyButton = document.querySelector('.buy-button');
+            if (buyButton) {
+                const buttonPosition = buyButton.offsetTop;
+                window.scrollTo({
+                    top: buttonPosition - 630,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Size selection
+        function selectSize(element) {
+            document.querySelectorAll('.size-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            element.classList.add('selected');
+        }
+
+        // Add to cart - Simple version
+        function addToCart() {
+            const selectedSize = document.querySelector('.size-option.selected');
+            if (!selectedSize) {
+                alert('Por favor, seleciona um tamanho primeiro.');
+                return;
+            }
+
+            const product = {
+                id: 'mystery-box-jogo',
+                name: 'Mystery Box - Camisolas de Jogo',
+                price: '€41,99',
+                originalPrice: '€81,99',
+                size: selectedSize.textContent,
+                quantity: 1
+            };
+
+            // Check if product with same size already exists
+            const existingItem = cart.find(item => item.id === product.id && item.size === product.size);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push(product);
+            }
+
+            // Save to localStorage
+            localStorage.setItem('mysterykit-cart', JSON.stringify(cart));
+            
+            // Update cart display
+            updateCartDisplay();
+            updateCartCounter();
+            
+            // Open cart automatically
+            toggleCart();
+        }
+
+        // Update cart display
+        function updateCartDisplay() {
+            const cartContent = document.querySelector('.cart-content');
+            
+            if (cart.length === 0) {
+                cartContent.className = 'cart-content empty';
+                cartContent.innerHTML = `
+                    <p>O seu carrinho está vazio</p>
+                    <button class="checkout-btn">Finalizar Compra →</button>
+                `;
+                return;
+            }
+
+            cartContent.className = 'cart-content';
+
+            let cartHTML = '<div class="cart-items">';
+            let total = 0;
+
+            cart.forEach(item => {
+                const itemPrice = parseFloat(item.price.replace('€', '').replace(',', '.'));
+                const itemTotal = itemPrice * item.quantity;
+                total += itemTotal;
+
+                cartHTML += `
+                    <div class="cart-item">
+                        <div class="cart-item-left">
+                            <div class="cart-item-image"></div>
+                            <div class="item-info">
+                                <h4>${item.name.replace('Mystery Box -', 'Mystery Box -<br>')}</h4>
+                            </div>
+                        </div>
+                        <div class="item-controls">
+                            <button onclick="updateQuantity('${item.id}', '${item.size}', -1)">-</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="updateQuantity('${item.id}', '${item.size}', 1)">+</button>
+                        </div>
+                        <div class="cart-item-right">
+                            <button onclick="removeFromCart('${item.id}', '${item.size}')" class="remove-btn"><img src="bin-icon-1412943-512.png" alt="Remove"></button>
+                            <div class="price-info">
+                                <div class="price-row">
+                                    <span class="original-price">${item.originalPrice}</span>
+                                    <span class="item-price">${item.price}</span>
+                                </div>
+                                <p class="savings">(POUPASTE €${(parseFloat(item.originalPrice.replace('€', '').replace(',', '.')) - parseFloat(item.price.replace('€', '').replace(',', '.'))).toFixed(2).replace('.', ',')})</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            cartHTML += '</div>';
+            cartHTML += `
+                <div class="cart-total">
+                    <span class="cart-total-label">Total:</span>
+                    <span class="cart-total-amount">€${total.toFixed(2).replace('.', ',')}</span>
+                </div>
+                <button class="checkout-btn">Finalizar Compra →</button>
+                <div class="payment-methods-cart">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="20" width="33" viewBox="-74.7 -40.204 647.4 241.224"><defs><linearGradient x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="scale(89.72793 -89.72793) rotate(-20.218 .966 -.457)" spreadMethod="pad" id="b"><stop offset="0" stop-color="#222357"/><stop offset="1" stop-color="#254aa5"/></linearGradient><clipPath clipPathUnits="userSpaceOnUse" id="a"><path d="M413.742 90.435c-.057-4.494 4.005-7.002 7.065-8.493 3.144-1.53 4.2-2.511 4.188-3.879-.024-2.094-2.508-3.018-4.833-3.054-4.056-.063-6.414 1.095-8.289 1.971l-1.461-6.837c1.881-.867 5.364-1.623 8.976-1.656 8.478 0 14.025 4.185 14.055 10.674.033 8.235-11.391 8.691-11.313 12.372.027 1.116 1.092 2.307 3.426 2.61 1.155.153 4.344.27 7.959-1.395l1.419 6.615c-1.944.708-4.443 1.386-7.554 1.386-7.98 0-13.593-4.242-13.638-10.314m34.827 9.744c-1.548 0-2.853-.903-3.435-2.289l-12.111-28.917h8.472l1.686 4.659h10.353l.978-4.659h7.467l-6.516 31.206h-6.894m1.185-8.43l2.445-11.718h-6.696l4.251 11.718m-46.284 8.43l-6.678-31.206h8.073l6.675 31.206h-8.07m-11.943 0l-8.403-21.24-3.399 18.06c-.399 2.016-1.974 3.18-3.723 3.18h-13.737l-.192-.906c2.82-.612 6.024-1.599 7.965-2.655 1.188-.645 1.527-1.209 1.917-2.742l6.438-24.903h8.532l13.08 31.206h-8.478"/></clipPath></defs><g clip-path="url(#a)" transform="matrix(4.98469 0 0 -4.98469 -1804.82 502.202)"><path d="M0 0l98.437 36.252 22.394-60.809-98.436-36.252" fill="url(#b)" transform="translate(351.611 96.896)"/></g></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="20" width="33" viewBox="-96 -98.908 832 593.448"><defs><style type="text/css">.e{fill:#f79e1b}</style></defs><path display="inline" fill="#ff5f00" stroke-width="5.494" d="M224.833 42.298h190.416v311.005H224.833z"/><path d="M244.446 197.828a197.448 197.448 0 0175.54-155.475 197.777 197.777 0 100 311.004 197.448 197.448 0 01-75.54-155.53z" fill="#eb001b" stroke-width="5.494"/><path d="M621.101 320.394v-6.372h2.747v-1.319h-6.537v1.319h2.582v6.373zm12.691 0v-7.69h-1.978l-2.307 5.493-2.308-5.494h-1.977v7.691h1.428v-5.823l2.143 5h1.483l2.143-5v5.823z" class="e" fill="#f79e1b" stroke-width="5.494"/><path d="M640 197.828a197.777 197.777 0 01-320.015 155.474 197.777 197.777 0 000-311.004A197.777 197.777 0 01640 197.773z" class="e" fill="#f79e1b" stroke-width="5.494"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="20" width="33" viewBox="-76.79115 -52.55 665.5233 315.3"><path d="M93.541 27.1c-6 7.1-15.6 12.7-25.2 11.9-1.2-9.6 3.5-19.8 9-26.1 6-7.3 16.5-12.5 25-12.9 1 10-2.9 19.8-8.8 27.1m8.7 13.8c-13.9-.8-25.8 7.9-32.4 7.9-6.7 0-16.8-7.5-27.8-7.3-14.3.2-27.6 8.3-34.9 21.2-15 25.8-3.9 64 10.6 85 7.1 10.4 15.6 21.8 26.8 21.4 10.6-.4 14.8-6.9 27.6-6.9 12.9 0 16.6 6.9 27.8 6.7 11.6-.2 18.9-10.4 26-20.8 8.1-11.8 11.4-23.3 11.6-23.9-.2-.2-22.4-8.7-22.6-34.3-.2-21.4 17.5-31.6 18.3-32.2-10-14.8-25.6-16.4-31-16.8m80.3-29v155.9h24.2v-53.3h33.5c30.6 0 52.1-21 52.1-51.4s-21.1-51.2-51.3-51.2zm24.2 20.4h27.9c21 0 33 11.2 33 30.9s-12 31-33.1 31h-27.8zm129.8 136.7c15.2 0 29.3-7.7 35.7-19.9h.5v18.7h22.4V90.2c0-22.5-18-37-45.7-37-25.7 0-44.7 14.7-45.4 34.9h21.8c1.8-9.6 10.7-15.9 22.9-15.9 14.8 0 23.1 6.9 23.1 19.6v8.6l-30.2 1.8c-28.1 1.7-43.3 13.2-43.3 33.2 0 20.2 15.7 33.6 38.2 33.6zm6.5-18.5c-12.9 0-21.1-6.2-21.1-15.7 0-9.8 7.9-15.5 23-16.4l26.9-1.7v8.8c0 14.6-12.4 25-28.8 25zm82 59.7c23.6 0 34.7-9 44.4-36.3l42.5-119.2h-24.6l-28.5 92.1h-.5l-28.5-92.1h-25.3l41 113.5-2.2 6.9c-3.7 11.7-9.7 16.2-20.4 16.2-1.9 0-5.6-.2-7.1-.4v18.7c1.4.4 7.4.6 9.2.6z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="20" width="33" class="main-header__logo-image" fill="#A1A1A1" viewBox="-65.39955 -43.28375 566.7961 259.7025"><path fill="#5f6368" d="M206.197 84.585v50.75h-16.1V10.005h42.7a38.61 38.61 0 0127.65 10.85 34.88 34.88 0 0111.55 26.45 34.72 34.72 0 01-11.55 26.6q-11.2 10.68-27.65 10.67h-26.6zm0-59.15v43.75h27a21.28 21.28 0 0015.93-6.48 21.36 21.36 0 000-30.63 21 21 0 00-15.93-6.65h-27zm102.9 21.35q17.85 0 28.18 9.54 10.33 9.54 10.32 26.16v52.85h-15.4v-11.9h-.7q-10 14.7-26.6 14.7-14.17 0-23.71-8.4a26.82 26.82 0 01-9.54-21q0-13.31 10.06-21.17 10.06-7.86 26.86-7.88 14.34 0 23.62 5.25v-3.68a18.33 18.33 0 00-6.65-14.25 22.8 22.8 0 00-15.54-5.87q-13.49 0-21.35 11.38l-14.18-8.93q11.7-16.8 34.63-16.8zm-20.83 62.3a12.86 12.86 0 005.34 10.5 19.64 19.64 0 0012.51 4.2 25.67 25.67 0 0018.11-7.52q8-7.53 8-17.67-7.53-6-21-6-9.81 0-16.36 4.73c-4.41 3.2-6.6 7.09-6.6 11.76zm147.73-59.5l-53.76 123.55h-16.62l19.95-43.23-35.35-80.32h17.5l25.55 61.6h.35l24.85-61.6z"/><path fill="#4285f4" d="M141.137 73.645a85.79 85.79 0 00-1.24-14.64h-67.9v27.73h38.89a33.33 33.33 0 01-14.38 21.88v18h23.21c13.59-12.53 21.42-31.06 21.42-52.97z"/><path fill="#34a853" d="M71.997 144.005c19.43 0 35.79-6.38 47.72-17.38l-23.21-18c-6.46 4.38-14.78 6.88-24.51 6.88-18.78 0-34.72-12.66-40.42-29.72H7.667v18.55a72 72 0 0064.33 39.67z"/><path fill="#fbbc04" d="M31.577 85.785a43.14 43.14 0 010-27.56v-18.55H7.667a72 72 0 000 64.66z"/><path fill="#ea4335" d="M71.997 28.505a39.09 39.09 0 0127.62 10.8l20.55-20.55A69.18 69.18 0 0071.997.005a72 72 0 00-64.33 39.67l23.91 18.55c5.7-17.06 21.64-29.72 40.42-29.72z"/></svg>
+                </div>
+            `;
+
+            cartContent.innerHTML = cartHTML;
+        }
+
+        // Update cart counter
+        function updateCartCounter() {
+            const cartIcon = document.querySelector('.cart-icon');
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            // Remove existing counter
+            const existingCounter = cartIcon.querySelector('.cart-counter');
+            if (existingCounter) {
+                existingCounter.remove();
+            }
+
+            // Add counter if there are items
+            if (totalItems > 0) {
+                const counter = document.createElement('span');
+                counter.className = 'cart-counter';
+                counter.textContent = totalItems;
+                counter.style.cssText = `
+                    position: absolute;
+                    top: -4px;
+                    right: -6px;
+                    background: #000;
+                    color: white;
+                    border-radius: 50%;
+                    width: 12px;
+                    height: 12px;
+                    font-size: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                `;
+                cartIcon.style.position = 'relative';
+                cartIcon.appendChild(counter);
+            }
+        }
+
+        // Update quantity
+        function updateQuantity(productId, size, change) {
+            const item = cart.find(item => item.id === productId && item.size === size);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromCart(productId, size);
+                    return;
+                }
+                localStorage.setItem('mysterykit-cart', JSON.stringify(cart));
+                updateCartDisplay();
+                updateCartCounter();
+            }
+        }
+
+        // Remove from cart
+        function removeFromCart(productId, size) {
+            cart = cart.filter(item => !(item.id === productId && item.size === size));
+            localStorage.setItem('mysterykit-cart', JSON.stringify(cart));
+            updateCartDisplay();
+            updateCartCounter();
+        }
+
+        function toggleCart() {
+            const overlay = document.getElementById('cartOverlay');
+            const sidebar = document.getElementById('cartSidebar');
+            
+            overlay.classList.toggle('active');
+            sidebar.classList.toggle('active');
+        }
+
+        // Mobile menu functionality
+        function showMobileMenu() {
+            toggleMobileMenu();
+        }
+
+        function toggleMobileMenu() {
+            const overlay = document.getElementById('menuOverlay');
+            const sidebar = document.getElementById('mobileSidebar');
+            
+            overlay.classList.toggle('active');
+            sidebar.classList.toggle('active');
+        }
+
+        // Calculate delivery date
+        function calculateDeliveryDate() {
+            const today = new Date();
+            const deliveryStart = new Date(today);
+            const deliveryEnd = new Date(today);
+            
+            deliveryStart.setDate(today.getDate() + 2); // +2 days
+            deliveryEnd.setDate(today.getDate() + 3); // +3 days
+            
+            const formatDate = (date) => {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                return `${day}.${month}`;
+            };
+            
+            return `${formatDate(deliveryStart)} - ${formatDate(deliveryEnd)}`;
+        }
+
+        // Mobile carousel functionality
+        let currentCarouselPosition = 0;
+        const carouselItemsToShow = 4;
+        const totalCarouselItems = 6;
+
+        function moveCarousel(direction) {
+            const track = document.getElementById('carouselTrack');
+            if (!track || !track.children.length) return;
+            
+            const itemWidth = track.children[0].offsetWidth + 5; // width + gap
+            
+            currentCarouselPosition += direction;
+            
+            // Limit carousel movement
+            if (currentCarouselPosition > 0) {
+                currentCarouselPosition = 0;
+            } else if (currentCarouselPosition < -(totalCarouselItems - carouselItemsToShow)) {
+                currentCarouselPosition = -(totalCarouselItems - carouselItemsToShow);
+            }
+            
+            track.style.transform = `translateX(${currentCarouselPosition * itemWidth}px)`;
+        }
+
+        function changeMainImage(imageSrc, clickedElement) {
+            const mainImage = document.getElementById('mainImage');
+            mainImage.style.backgroundImage = `url('${imageSrc}')`;
+            
+            // Remove active class from all carousel items
+            document.querySelectorAll('.carousel-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to clicked item
+            clickedElement.classList.add('active');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('deliveryDate').textContent = calculateDeliveryDate();
+            updateCartDisplay();
+            updateCartCounter();
+        });
+
+        // Sistema de conteúdo dinâmico para Mystery Boxes
+        const mysteryBoxContent = {
+            jogo: {
+                title: 'Mystery Box - Camisolas de Jogo',
+                productTitle: 'Mystery Box - Camisolas de Jogo',
+                price: '€41,99',
+                description: 'Cada caixa contém uma camisola oficial de jogo de equipas portuguesas e internacionais.',
+                features: ['Camisola oficial de jogo', 'Equipas nacionais e internacionais', 'Qualidade premium'],
+                category: 'jogo'
+            },
+            treino: {
+                title: 'Mystery Box - Camisolas de Treino',
+                productTitle: 'Mystery Box - Camisolas de Treino',
+                price: '€34,99',
+                description: 'Cada caixa contém uma camisola oficial de treino de equipas portuguesas e internacionais.',
+                features: ['Camisola oficial de treino', 'Material técnico respirável', 'Design moderno'],
+                category: 'treino'
+            },
+            tripla: {
+                title: 'Caixa Tripla - Camisolas de Jogo',
+                productTitle: 'Caixa Tripla - Camisolas de Jogo',
+                price: '€119,99',
+                description: 'Caixa especial com 3 camisolas oficiais de jogo de diferentes equipas.',
+                features: ['3 camisolas oficiais', 'Equipas variadas', 'Valor especial'],
+                category: 'jogo'
+            },
+            partilhar: {
+                title: 'Caixa de 5 para Partilhar - Camisolas de Jogo',
+                productTitle: 'Caixa de 5 para Partilhar',
+                price: '€189,99',
+                description: 'Caixa ideal para partilhar com amigos! 5 camisolas oficiais de jogo.',
+                features: ['5 camisolas oficiais', 'Perfeito para grupos', 'Máximo valor'],
+                category: 'jogo'
+            }
+        };
+
+        // Função para obter parâmetros da URL
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Função para carregar conteúdo dinâmico
+        function loadDynamicContent() {
+            const type = getUrlParameter('type') || 'jogo';
+            const content = mysteryBoxContent[type] || mysteryBoxContent.jogo;
+            
+            // Atualizar título da página
+            document.getElementById('page-title').textContent = content.title;
+            
+            // Atualizar título do produto
+            document.getElementById('product-title').textContent = content.productTitle;
+            
+            // Atualizar preço se houver elemento específico
+            const priceElement = document.querySelector('.price-current');
+            if (priceElement) {
+                priceElement.textContent = content.price;
+            }
+        }
+
+        // Carregar conteúdo quando a página carrega
+        document.addEventListener('DOMContentLoaded', loadDynamicContent);
+
+    </script>
+</body>
+</html>

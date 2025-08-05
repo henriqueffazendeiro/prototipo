@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protótipo - Mystery Box de Camisolas de Futebol</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Animated Top Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 32px;
+            background: #1e3a8a;
+            color: white;
+            z-index: 1001;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        .scrolling-text {
+            white-space: nowrap;
+            animation: scroll 60s linear infinite;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .desktop-text {
+            display: inline;
+        }
+        
+        .mobile-text {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .scrolling-text {
+                font-size: 12px;
+            }
+            
+            .desktop-text {
+                display: none;
+            }
+            
+            .mobile-text {
+                display: inline;
+            }
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 32px;
+            left: 0;
+            width: 100%;
+            z-index: 1002;
+            transition: all 0.3s ease;
+            padding: 15px 0;
+        }
+
+        .header.scrolled {
+            top: 0;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo img {
+            transition: height 0.3s ease;
+        }
+
+        .navbar a {
+            transition: font-size 0.3s ease;
+        }
+
+        .cart-icon svg {
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+
+        .mobile-menu {
+            transition: font-size 0.3s ease;
+        }
+
+        .header-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo img {
+            height: 28px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        .navbar a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .navbar a:hover {
+            color: #3b82f6;
+        }
+
+        .cart-icon {
+            justify-self: end;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+            color: #333;
+            border: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .cart-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .cart-icon:hover {
+            color: #1e3a8a;
+            transform: scale(1.1);
+        }
+
+        .mobile-menu {
+            display: none;
+        }
+
+        /* Cart Sidebar */
+        .cart-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .cart-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .cart-sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            z-index: 2001;
+            transition: right 0.3s ease;
+            padding: 20px;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-sidebar.active {
+            right: 0;
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .close-cart {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .cart-content {
+            height: calc(100vh - 120px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #666;
+        }
+
+        .checkout-btn {
+            background: linear-gradient(135deg, #3b82f6, #1e3a8a);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .checkout-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Menu Sidebar */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mobile-menu-sidebar {
+            position: fixed;
+            top: 0;
+            left: -400px;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            z-index: 2001;
+            transition: left 0.3s ease;
+            padding: 20px;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .mobile-menu-sidebar.active {
+            left: 0;
+        }
+
+        .menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .close-menu {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .menu-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .mobile-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .mobile-nav a {
+            color: #333;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 500;
+            padding: 10px 0;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 20px 0;
+        }
+
+        .mobile-features {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .feature-item img {
+            width: 20px;
+            height: 20px;
+            filter: brightness(0) saturate(100%) invert(42%) sepia(0%) saturate(1%) hue-rotate(257deg) brightness(100%) contrast(88%);
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            background: url('fundo1.png') center center / cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            margin-top: 0;
+            padding-top: 82px;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="3" fill="rgba(255,255,255,0.05)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            max-width: 1250px;
+            margin: 0 auto;
+            padding-left: 20px;
+            padding-top: 100px;
+            padding-bottom: 120px;
+            position: relative;
+        }
+
+
+
+        .cta-btn {
+            background: #1e3a8a;
+            color: white;
+            padding: 1vw 8vw;
+            border: none;
+            border-radius: 15px;
+            font-size: clamp(1rem, 1.4vw, 1.6rem);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8vw;
+            box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3);
+        }
+
+        .cta-btn::after {
+            content: '→';
+            font-size: clamp(1.2rem, 2vw, 2.4rem);
+            transition: transform 0.3s ease;
+        }
+
+        .cta-btn:hover {
+            background: #2563eb;
+        }
+
+        .cta-btn:hover::after {
+            transform: translateX(5px);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mystery Boxes Section */
+        .mystery-boxes {
+            padding: 100px 0;
+            background: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 60px;
+            font-weight: bold;
+        }
+
+        .boxes-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+        }
+
+        .box-card {
+            background: white;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 350px;
+            min-width: 280px;
+        }
+
+        .box-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .box-image {
+            width: 100%;
+            height: 200px;
+            background-image: url('1.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            position: relative;
+            transition: background-image 0.3s ease;
+        }
+
+        .box-card:hover .box-image {
+            background-image: url('2.png');
+        }
+
+        .savings-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #1e3a8a;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .box-content {
+            padding: 20px 30px 30px 30px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .box-name {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .box-price {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .box-price-current {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+
+        .box-price-original {
+            font-size: 1rem;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.6);
+            text-decoration: line-through;
+        }
+
+        /* Instagram Section */
+        .instagram-section {
+            padding: 80px 0;
+            background: #f3f4f6;
+            text-align: center;
+        }
+
+        .instagram-section h2 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .instagram-section p {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .instagram-btn {
+            background: linear-gradient(45deg, #833ab4, #fd1d1d, #fcb045);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .instagram-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Reviews Band */
+        .reviews-band {
+            background: #1e3a8a;
+            color: white;
+            padding: 8px 0;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 100px 0;
+            background: white;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .step {
+            text-align: center;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .step-image {
+            width: 100%;
+            height: 200px;
+            background-image: url('11.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 15px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: #1e3a8a;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .step:nth-child(2) .step-image {
+            background-image: url('12.png');
+        }
+
+        .step:nth-child(3) .step-image {
+            background-image: url('13.png');
+        }
+
+        .step:nth-child(4) .step-image {
+            background-image: url('14.png');
+        }
+
+        .step h4 {
+            color: black;
+            font-weight: bold;
+            font-size: 1rem;
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+
+        .step p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Final CTA */
+        .final-cta {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            padding: 40px 0;
+        }
+
+        .cta-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .cta-text h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .cta-text p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .cta-white-btn {
+            background: white;
+            color: #1e3a8a;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .cta-white-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .cta-image img {
+            width: 80%;
+            height: auto;
+            border-radius: 15px;
+        }
+
+        /* Footer */
+        .footer {
+            background: #111827;
+            color: white;
+            padding: 30px 0;
+        }
+
+        .footer-content {
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .footer-divider {
+            width: 100%;
+            height: 1px;
+            background: #666;
+            margin: 0 0 30px 0;
+        }
+
+        .footer-logo {
+            height: 35px;
+            margin-bottom: 15px;
+        }
+
+        .footer-links {
+            margin-bottom: 15px;
+        }
+
+        .footer-links a {
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .separator {
+            margin: 0 10px;
+            color: #666;
+        }
+
+        .footer-payment {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .footer-copyright {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .header.scrolled {
+                padding: 8px 0;
+            }
+
+            .header.scrolled .logo img {
+                height: 20px;
+            }
+
+            .header.scrolled .cart-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .header.scrolled .mobile-menu {
+                font-size: 16px;
+            }
+            .hero {
+                background: url('fundo2.png') center center / cover no-repeat;
+            }
+            .header-content {
+                grid-template-columns: auto 1fr auto;
+                gap: 15px;
+            }
+
+            .logo {
+                order: 2;
+                justify-self: center;
+            }
+
+            .mobile-menu {
+                display: block;
+                order: 1;
+                background: none;
+                border: none;
+                font-size: 20px;
+                cursor: pointer;
+                color: #333;
+            }
+
+            .navbar {
+                display: none;
+            }
+
+            .cart-icon {
+                order: 3;
+                width: 40px;
+                height: 40px;
+            }
+
+            .cart-sidebar {
+                width: 90% !important;
+                right: -90% !important;
+            }
+            
+            .cart-sidebar.active {
+                right: 0% !important;
+            }
+            
+            .mobile-menu-sidebar {
+                width: 80% !important;
+                left: -80% !important;
+            }
+            
+            .mobile-menu-sidebar.active {
+                left: 0% !important;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.2rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+                line-height: 1.2;
+            }
+            
+            .box-name {
+                font-size: 0.9rem;
+                line-height: 1.2;
+            }
+
+            .cta-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .cta-text h2 {
+                font-size: 2rem;
+            }
+
+            .boxes-grid {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+                padding: 0 50px;
+                gap: 10px;
+            }
+            
+            .boxes-grid::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .box-card {
+                min-width: 360px;
+                width: 360px;
+                height: 420px;
+                flex-shrink: 0;
+                scroll-snap-align: center;
+                transition: all 0.3s ease;
+                transform: scale(0.7);
+                filter: blur(2px);
+                opacity: 0.4;
+                margin: 0 -60px;
+            }
+            
+            .box-card.active {
+                transform: scale(1);
+                filter: blur(0);
+                opacity: 1;
+                z-index: 10;
+                position: relative;
+            }
+            
+            @media (max-width: 400px) {
+                .boxes-grid {
+                    padding: 0 30px;
+                    gap: 10px;
+                }
+                
+                .box-card {
+                    min-width: 280px;
+                    width: 280px;
+                    height: 420px;
+                    transform: scale(0.6);
+                    margin: 0 -35px;
+                }
+                
+                .box-card.active {
+                    transform: scale(0.9);
+                }
+            }
+
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .mystery-boxes {
+                padding: 60px 0;
+            }
+            
+            .instagram-section {
+                padding: 50px 0;
+            }
+            
+            .how-it-works {
+                padding: 60px 0;
+            }
+            
+            .final-cta {
+                padding: 30px 0;
+            }
+            
+            .instagram-section h2 {
+                font-size: 1.5rem;
+                line-height: 1.2;
+            }
+            
+            .cta-text h2 {
+                font-size: 1.8rem;
+                line-height: 1.2;
+            }
+            
+            .cta-text p:last-child {
+                font-size: 0.8rem;
+                line-height: 1.2;
+                white-space: nowrap;
+            }
+            
+            
+            .box-card {
+                height: auto;
+            }
+            
+            .box-image {
+                height: 0;
+                padding-bottom: 100%;
+                width: 100%;
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+            }
+            
+            .box-content {
+                height: auto !important;
+                min-height: 40px;
+                padding: 20px 10px 15px 10px !important;
+                margin-top: 20px !important;
+                position: relative;
+            }
+            
+            .box-name {
+                margin-bottom: 5px !important;
+                margin-top: 5px !important;
+            }
+            
+            .box-price {
+                margin: 0 !important;
+            }
+            
+            .step-image {
+                height: 0;
+                padding-bottom: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Top Bar -->
+    <div class="top-bar">
+        <div class="scrolling-text">
+<span class="desktop-text">ENTREGAS EM 48H&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRODUTOS AUTÊNTICOS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENVIO GRÁTIS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENTREGAS EM 48H&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRODUTOS AUTÊNTICOS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENVIO GRÁTIS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="mobile-text">ENTREGAS EM 48H&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRODUTOS AUTÊNTICOS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENVIO GRÁTIS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENTREGAS EM 48H&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRODUTOS AUTÊNTICOS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENVIO GRÁTIS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="container">
+            <div class="header-content">
+                <button class="mobile-menu" onclick="showMobileMenu()">☰</button>
+                <a href="#" class="logo">
+                    <img src="logo.png" alt="Protótipo">
+                </a>
+                <nav class="navbar">
+                    <a href="#mystery-boxes">Mystery Boxes</a>
+                    <a href="#instagram-section">Sobre Nós</a>
+                    <a href="#contact">Contacto</a>
+                </nav>
+                <button class="cart-icon" onclick="toggleCart()">
+                    <svg width="16" height="16" viewBox="0 0 1664 1280" fill="currentColor">
+                        <path d="M640 1280q0 52-38 90t-90 38t-90-38t-38-90t38-90t90-38t90 38t38 90m896 0q0 52-38 90t-90 38t-90-38t-38-90t38-90t90-38t90 38t38 90m128-1088v512q0 24-16.5 42.5T1607 768L563 890q13 60 13 70q0 16-24 64h920q26 0 45 19t19 45t-19 45t-45 19H448q-26 0-45-19t-19-45q0-11 8-31.5t16-36t21.5-40T445 951L268 128H64q-26 0-45-19T0 64t19-45T64 0h256q16 0 28.5 6.5T368 22t13 24.5t8 26t5.5 29.5t4.5 26h1201q26 0 45 19t19 45"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>Carrinho de Compras</h3>
+            <button class="close-cart" onclick="toggleCart()">×</button>
+        </div>
+        <div class="cart-content">
+            <p>O seu carrinho está vazio</p>
+            <button class="checkout-btn">Finalizar Compra</button>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Sidebar -->
+    <div class="menu-overlay" id="menuOverlay" onclick="toggleMobileMenu()"></div>
+    <div class="mobile-menu-sidebar" id="mobileSidebar">
+        <div class="menu-header">
+            <h3>Menu</h3>
+            <button class="close-menu" onclick="toggleMobileMenu()">×</button>
+        </div>
+        <div class="menu-content">
+            <nav class="mobile-nav">
+                <a href="#mystery-boxes" onclick="toggleMobileMenu()">Mystery Boxes</a>
+                <a href="#instagram-section" onclick="toggleMobileMenu()">Sobre Nós</a>
+                <a href="#contact" onclick="toggleMobileMenu()">Contacto</a>
+            </nav>
+            <div class="menu-divider"></div>
+            <div class="mobile-features">
+                <div class="feature-item">
+                    <img src="local_shipping.svg" alt="Entregas">
+                    <span>Entregas em 48h</span>
+                </div>
+                <div class="feature-item">
+                    <img src="check_circle.svg" alt="Produtos oficiais">
+                    <span>Produtos oficiais</span>
+                </div>
+                <div class="feature-item">
+                    <img src="package_2.svg" alt="Envio grátis">
+                    <span>Envio grátis</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+        </div>
+    </section>
+
+    <!-- Mystery Boxes Section -->
+    <section class="mystery-boxes" id="mystery-boxes">
+        <div class="container">
+            <h2 class="section-title">AS NOSSAS MYSTERY BOXES MAIS VENDIDAS</h2>
+            <div class="boxes-grid">
+                <div class="box-card" onclick="showBoxDetails('Mystery Box - Camisolas de Jogo')">
+                    <div class="box-image">
+                        <div class="savings-badge">POUPA €40</div>
+                    </div>
+                    <div class="box-content">
+                        <h3 class="box-name">Mystery Box - Camisolas de Jogo</h3>
+                        <div class="box-price">
+                            <span class="box-price-current">€41,99</span>
+                            <span class="box-price-original">€81,99</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-card" onclick="showBoxDetails('Mystery Box - Camisolas de Treino')">
+                    <div class="box-image">
+                        <div class="savings-badge">POUPA €15</div>
+                    </div>
+                    <div class="box-content">
+                        <h3 class="box-name">Mystery Box - Camisolas de Treino</h3>
+                        <div class="box-price">
+                            <span class="box-price-current">€34,99</span>
+                            <span class="box-price-original">€49,99</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-card" onclick="showBoxDetails('Caixa Tripla - Camisolas de Jogo')">
+                    <div class="box-image">
+                        <div class="savings-badge">POUPA €129,98</div>
+                    </div>
+                    <div class="box-content">
+                        <h3 class="box-name">Caixa Tripla - Camisolas de Jogo</h3>
+                        <div class="box-price">
+                            <span class="box-price-current">€109,99</span>
+                            <span class="box-price-original">€239,97</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-card" onclick="showBoxDetails('Caixa de 5 para Partilhar - Camisolas de Jogo')">
+                    <div class="box-image">
+                        <div class="savings-badge">POUPA €219,96</div>
+                    </div>
+                    <div class="box-content">
+                        <h3 class="box-name">Caixa de 5 para Partilhar - Camisolas de Jogo</h3>
+                        <div class="box-price">
+                            <span class="box-price-current">€179,99</span>
+                            <span class="box-price-original">€399,95</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instagram Section -->
+    <section class="instagram-section" id="instagram-section">
+        <div class="container">
+            <h2>Ajude-nos a alcançar 50.000 seguidores!</h2>
+            <p>Segue-nos para nos ajudares a atingir a nossa meta e fica a par de promoções exclusivas, unboxings dos nossos clientes e todas as novidades sobre as nossas mystery boxes!</p>
+            <a href="https://instagram.com/prototipo_pt" class="instagram-btn" target="_blank">@prototipo_pt</a>
+        </div>
+    </section>
+
+    <!-- Reviews Band -->
+    <section class="reviews-band">
+        <div class="container">
+            ★★★★☆ 4.5 | +9000 Clientes Felizes
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="about">
+        <div class="container">
+            <h2 class="section-title">Como Funciona?</h2>
+            <div class="steps-grid">
+                <div class="step">
+                    <div class="step-image">
+                        <div class="step-number">1</div>
+                    </div>
+                    <h4>Escolhe a tua Mystery Box:</h4>
+                    <p>Escolhe uma das nossas caixas mistério entre as várias opções disponíveis.</p>
+                </div>
+                <div class="step">
+                    <div class="step-image">
+                        <div class="step-number">2</div>
+                    </div>
+                    <h4>Escolhe o teu tamanho:</h4>
+                    <p>Desde o XS até ao 3XL. Recomendamos que escolhas o tamanho que costumas usar em t-shirts normalmente.</p>
+                </div>
+                <div class="step">
+                    <div class="step-image">
+                        <div class="step-number">3</div>
+                    </div>
+                    <h4>O que queres evitar?</h4>
+                    <p>Diz-nos na caixa de texto fornecida quais os clubes, ligas ou cores que não queres que saiam na tua caixa.</p>
+                </div>
+                <div class="step">
+                    <div class="step-image">
+                        <div class="step-number">4</div>
+                    </div>
+                    <h4>Recebe a tua encomenda:</h4>
+                    <p>Enviamos rapidamente para toda a Europa.<br>Portugal: 48h | Europa: 1 a 5 dias</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+        <div class="container">
+            <div class="cta-content">
+                <div class="cta-image">
+                    <img src="caixa.png" alt="Mystery Box Caixa">
+                </div>
+                <div class="cta-text">
+                    <h2><strong>Escolhe a Tua Caixa</strong></h2>
+                    <p>Junta-te a milhares de fãs de futebol que já descobriram camisolas incríveis com as nossas mystery boxes.</p>
+                    <a href="#mystery-boxes" class="cta-white-btn">Comprar Agora</a>
+                    <p style="color: white; margin-top: 0; font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;"><img src="CircleWavyCheck.svg" style="width: 12px; height: 12px; filter: brightness(0) invert(1);" alt="Check">&nbsp;PRODUTOS&nbsp;100%&nbsp;OFICIAIS&nbsp;E&nbsp;AUTÊNTICOS</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="footer-divider"></div>
+        <div class="container">
+            <div class="footer-content">
+                <img src="logo2.png" alt="Protótipo" class="footer-logo">
+                <div class="footer-links">
+                    <a href="mailto:info@prototipo.pt">info@prototipo.pt</a>
+                    <span class="separator">•</span>
+                    <a href="#">Política de Privacidade</a>
+                    <span class="separator">•</span>
+                    <a href="#">Termos e Condições</a>
+                </div>
+                <div class="footer-payment">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="25" width="40" viewBox="-74.7 -40.204 647.4 241.224"><defs><linearGradient x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="scale(89.72793 -89.72793) rotate(-20.218 .966 -.457)" spreadMethod="pad" id="b"><stop offset="0" stop-color="#222357"/><stop offset="1" stop-color="#254aa5"/></linearGradient><clipPath clipPathUnits="userSpaceOnUse" id="a"><path d="M413.742 90.435c-.057-4.494 4.005-7.002 7.065-8.493 3.144-1.53 4.2-2.511 4.188-3.879-.024-2.094-2.508-3.018-4.833-3.054-4.056-.063-6.414 1.095-8.289 1.971l-1.461-6.837c1.881-.867 5.364-1.623 8.976-1.656 8.478 0 14.025 4.185 14.055 10.674.033 8.235-11.391 8.691-11.313 12.372.027 1.116 1.092 2.307 3.426 2.61 1.155.153 4.344.27 7.959-1.395l1.419 6.615c-1.944.708-4.443 1.386-7.554 1.386-7.98 0-13.593-4.242-13.638-10.314m34.827 9.744c-1.548 0-2.853-.903-3.435-2.289l-12.111-28.917h8.472l1.686 4.659h10.353l.978-4.659h7.467l-6.516 31.206h-6.894m1.185-8.43l2.445-11.718h-6.696l4.251 11.718m-46.284 8.43l-6.678-31.206h8.073l6.675 31.206h-8.07m-11.943 0l-8.403-21.24-3.399 18.06c-.399 2.016-1.974 3.18-3.723 3.18h-13.737l-.192-.906c2.82-.612 6.024-1.599 7.965-2.655 1.188-.645 1.527-1.209 1.917-2.742l6.438-24.903h8.532l13.08 31.206h-8.478"/></clipPath></defs><g clip-path="url(#a)" transform="matrix(4.98469 0 0 -4.98469 -1804.82 502.202)"><path d="M0 0l98.437 36.252 22.394-60.809-98.436-36.252" fill="url(#b)" transform="translate(351.611 96.896)"/></g></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="25" width="40" viewBox="-96 -98.908 832 593.448"><defs><style type="text/css">.e{fill:#f79e1b}</style></defs><path display="inline" fill="#ff5f00" stroke-width="5.494" d="M224.833 42.298h190.416v311.005H224.833z"/><path d="M244.446 197.828a197.448 197.448 0 0175.54-155.475 197.777 197.777 0 100 311.004 197.448 197.448 0 01-75.54-155.53z" fill="#eb001b" stroke-width="5.494"/><path d="M621.101 320.394v-6.372h2.747v-1.319h-6.537v1.319h2.582v6.373zm12.691 0v-7.69h-1.978l-2.307 5.493-2.308-5.494h-1.977v7.691h1.428v-5.823l2.143 5h1.483l2.143-5v5.823z" class="e" fill="#f79e1b" stroke-width="5.494"/><path d="M640 197.828a197.777 197.777 0 01-320.015 155.474 197.777 197.777 0 000-311.004A197.777 197.777 0 01640 197.773z" class="e" fill="#f79e1b" stroke-width="5.494"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="25" width="40" viewBox="-76.79115 -52.55 665.5233 315.3"><path d="M93.541 27.1c-6 7.1-15.6 12.7-25.2 11.9-1.2-9.6 3.5-19.8 9-26.1 6-7.3 16.5-12.5 25-12.9 1 10-2.9 19.8-8.8 27.1m8.7 13.8c-13.9-.8-25.8 7.9-32.4 7.9-6.7 0-16.8-7.5-27.8-7.3-14.3.2-27.6 8.3-34.9 21.2-15 25.8-3.9 64 10.6 85 7.1 10.4 15.6 21.8 26.8 21.4 10.6-.4 14.8-6.9 27.6-6.9 12.9 0 16.6 6.9 27.8 6.7 11.6-.2 18.9-10.4 26-20.8 8.1-11.8 11.4-23.3 11.6-23.9-.2-.2-22.4-8.7-22.6-34.3-.2-21.4 17.5-31.6 18.3-32.2-10-14.8-25.6-16.4-31-16.8m80.3-29v155.9h24.2v-53.3h33.5c30.6 0 52.1-21 52.1-51.4s-21.1-51.2-51.3-51.2zm24.2 20.4h27.9c21 0 33 11.2 33 30.9s-12 31-33.1 31h-27.8zm129.8 136.7c15.2 0 29.3-7.7 35.7-19.9h.5v18.7h22.4V90.2c0-22.5-18-37-45.7-37-25.7 0-44.7 14.7-45.4 34.9h21.8c1.8-9.6 10.7-15.9 22.9-15.9 14.8 0 23.1 6.9 23.1 19.6v8.6l-30.2 1.8c-28.1 1.7-43.3 13.2-43.3 33.2 0 20.2 15.7 33.6 38.2 33.6zm6.5-18.5c-12.9 0-21.1-6.2-21.1-15.7 0-9.8 7.9-15.5 23-16.4l26.9-1.7v8.8c0 14.6-12.4 25-28.8 25zm82 59.7c23.6 0 34.7-9 44.4-36.3l42.5-119.2h-24.6l-28.5 92.1h-.5l-28.5-92.1h-25.3l41 113.5-2.2 6.9c-3.7 11.7-9.7 16.2-20.4 16.2-1.9 0-5.6-.2-7.1-.4v18.7c1.4.4 7.4.6 9.2.6z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="25" width="40" class="main-header__logo-image" fill="#A1A1A1" viewBox="-65.39955 -43.28375 566.7961 259.7025"><path fill="#5f6368" d="M206.197 84.585v50.75h-16.1V10.005h42.7a38.61 38.61 0 0127.65 10.85 34.88 34.88 0 0111.55 26.45 34.72 34.72 0 01-11.55 26.6q-11.2 10.68-27.65 10.67h-26.6zm0-59.15v43.75h27a21.28 21.28 0 0015.93-6.48 21.36 21.36 0 000-30.63 21 21 0 00-15.93-6.65h-27zm102.9 21.35q17.85 0 28.18 9.54 10.33 9.54 10.32 26.16v52.85h-15.4v-11.9h-.7q-10 14.7-26.6 14.7-14.17 0-23.71-8.4a26.82 26.82 0 01-9.54-21q0-13.31 10.06-21.17 10.06-7.86 26.86-7.88q14.34 0 23.62 5.25v-3.68a18.33 18.33 0 00-6.65-14.25 22.8 22.8 0 00-15.54-5.87q-13.49 0-21.35 11.38l-14.18-8.93q11.7-16.8 34.63-16.8zm-20.83 62.3a12.86 12.86 0 005.34 10.5 19.64 19.64 0 0012.51 4.2 25.67 25.67 0 0018.11-7.52q8-7.53 8-17.67-7.53-6-21-6-9.81 0-16.36 4.73c-4.41 3.2-6.6 7.09-6.6 11.76zm147.73-59.5l-53.76 123.55h-16.62l19.95-43.23-35.35-80.32h17.5l25.55 61.6h.35l24.85-61.6z"/><path fill="#4285f4" d="M141.137 73.645a85.79 85.79 0 00-1.24-14.64h-67.9v27.73h38.89a33.33 33.33 0 01-14.38 21.88v18h23.21c13.59-12.53 21.42-31.06 21.42-52.97z"/><path fill="#34a853" d="M71.997 144.005c19.43 0 35.79-6.38 47.72-17.38l-23.21-18c-6.46 4.38-14.78 6.88-24.51 6.88-18.78 0-34.72-12.66-40.42-29.72H7.667v18.55a72 72 0 0064.33 39.67z"/><path fill="#fbbc04" d="M31.577 85.785a43.14 43.14 0 010-27.56v-18.55H7.667a72 72 0 000 64.66z"/><path fill="#ea4335" d="M71.997 28.505a39.09 39.09 0 0127.62 10.8l20.55-20.55A69.18 69.18 0 0071.997.005a72 72 0 00-64.33 39.67l23.91 18.55c5.7-17.06 21.64-29.72 40.42-29.72z"/></svg>
+                </div>
+                <p class="footer-copyright">&copy; 2025 Protótipo. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Header scroll effect
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+
+            // Sticky buy bar effect for mobile only
+            const mysteryBoxesSection = document.querySelector('.mystery-boxes');
+            const isMobile = window.innerWidth <= 768;
+            
+            if (mysteryBoxesSection && isMobile) {
+                const sectionTop = mysteryBoxesSection.offsetTop;
+                const scrollPosition = window.scrollY;
+                
+                // You can add sticky bar logic here if needed
+                // This matches the mystery box page structure
+            }
+        });
+
+        // Smooth scrolling for anchor links (only internal links)
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    // Center the instagram section, others stay at top
+                    const block = this.getAttribute('href') === '#instagram-section' ? 'center' : 'start';
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: block
+                    });
+                }
+            });
+        });
+
+        // Cart functionality - Simple version
+        function toggleCart() {
+            const overlay = document.getElementById('cartOverlay');
+            const sidebar = document.getElementById('cartSidebar');
+            
+            overlay.classList.toggle('active');
+            sidebar.classList.toggle('active');
+        }
+
+        // Box click handler
+        function showBoxDetails(boxName) {
+            switch(boxName) {
+                case 'Mystery Box - Camisolas de Jogo':
+                    window.location.href = 'mystery-box.html?type=jogo';
+                    break;
+                case 'Mystery Box - Camisolas de Treino':
+                    window.location.href = 'mystery-box.html?type=treino';
+                    break;
+                case 'Caixa Tripla - Camisolas de Jogo':
+                    window.location.href = 'mystery-box.html?type=tripla';
+                    break;
+                case 'Caixa de 5 para Partilhar - Camisolas de Jogo':
+                    window.location.href = 'mystery-box.html?type=partilhar';
+                    break;
+                default:
+                    alert('Página em desenvolvimento!');
+            }
+        }
+
+        // Mobile menu functionality
+        function showMobileMenu() {
+            toggleMobileMenu();
+        }
+
+        function toggleMobileMenu() {
+            const overlay = document.getElementById('menuOverlay');
+            const sidebar = document.getElementById('mobileSidebar');
+            
+            overlay.classList.toggle('active');
+            sidebar.classList.toggle('active');
+        }
+
+        // Add sequential animation to steps
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const steps = entry.target.querySelectorAll('.step');
+                    steps.forEach((step, index) => {
+                        setTimeout(() => {
+                            step.style.animationDelay = `${index * 0.2}s`;
+                            step.style.opacity = '1';
+                        }, index * 200);
+                    });
+                }
+            });
+        }, observerOptions);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const stepsGrid = document.querySelector('.steps-grid');
+            if (stepsGrid) {
+                observer.observe(stepsGrid);
+            }
+            
+            // Mobile carousel for mystery boxes
+            if (window.innerWidth <= 768) {
+                const boxesGrid = document.querySelector('.boxes-grid');
+                const boxCards = document.querySelectorAll('.box-card');
+                
+                // Set first card as active
+                if (boxCards.length > 0) {
+                    boxCards[0].classList.add('active');
+                }
+                
+                // Handle scroll to update active card and center it
+                let isScrolling = false;
+                
+                function centerCard(index) {
+                    const card = boxCards[index];
+                    const containerWidth = boxesGrid.clientWidth;
+                    const cardWidth = card.offsetWidth;
+                    const cardLeft = card.offsetLeft;
+                    const centerPosition = cardLeft - (containerWidth / 2) + (cardWidth / 2);
+                    
+                    boxesGrid.scrollTo({
+                        left: centerPosition,
+                        behavior: 'smooth'
+                    });
+                }
+                
+                boxesGrid.addEventListener('scroll', () => {
+                    if (!isScrolling) {
+                        window.requestAnimationFrame(() => {
+                            const containerCenter = boxesGrid.scrollLeft + (boxesGrid.clientWidth / 2);
+                            let activeIndex = 0;
+                            let minDistance = Infinity;
+                            
+                            boxCards.forEach((card, index) => {
+                                const cardCenter = card.offsetLeft + (card.offsetWidth / 2);
+                                const distance = Math.abs(containerCenter - cardCenter);
+                                
+                                if (distance < minDistance) {
+                                    minDistance = distance;
+                                    activeIndex = index;
+                                }
+                            });
+                            
+                            boxCards.forEach((card, index) => {
+                                if (index === activeIndex) {
+                                    card.classList.add('active');
+                                } else {
+                                    card.classList.remove('active');
+                                }
+                            });
+                            
+                            isScrolling = false;
+                        });
+                    }
+                    isScrolling = true;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
