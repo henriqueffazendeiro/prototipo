@@ -18,6 +18,10 @@
             overflow-x: hidden;
         }
 
+        body.no-scroll {
+            overflow: hidden;
+        }
+
         .container {
             max-width: 1250px;
             margin: 0 auto;
@@ -252,7 +256,26 @@
             overflow-x: hidden;
             padding: 0;
             margin: 0;
-            padding-bottom: 120px;
+            padding-bottom: 60px;
+            max-height: calc(100vh - 200px);
+        }
+
+        .cart-items::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .cart-items::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .cart-items::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .cart-items::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
 
         .cart-item {
@@ -1637,7 +1660,6 @@
         </div>
         <div class="cart-content">
             <p>O seu carrinho está vazio</p>
-            <button class="checkout-btn">Finalizar Compra</button>
         </div>
     </div>
 
@@ -1982,11 +2004,15 @@
                 return;
             }
 
+            // Get current page product data
+            const type = getUrlParameter('type') || 'jogo';
+            const currentProduct = mysteryBoxContent[type] || mysteryBoxContent.jogo;
+            
             const product = {
-                id: 'mystery-box-jogo',
-                name: 'Mystery Box - Camisolas de Jogo',
-                price: '€41,99',
-                originalPrice: '€81,99',
+                id: currentProduct.id,
+                name: currentProduct.productTitle,
+                price: currentProduct.price,
+                originalPrice: currentProduct.originalPrice,
                 size: selectedSize.textContent,
                 quantity: 1
             };
@@ -2018,7 +2044,6 @@
                 cartContent.className = 'cart-content empty';
                 cartContent.innerHTML = `
                     <p>O seu carrinho está vazio</p>
-                    <button class="checkout-btn">Finalizar Compra →</button>
                 `;
                 return;
             }
@@ -2038,7 +2063,7 @@
                         <div class="cart-item-left">
                             <div class="cart-item-image"></div>
                             <div class="item-info">
-                                <h4>${item.name.replace('Mystery Box -', 'Mystery Box -<br>')}</h4>
+                                <h4>${item.name.replace('Mystery Box -', 'Mystery Box -<br>').replace('Caixa Tripla -', 'Caixa Tripla -<br>').replace('Caixa de 5', 'Caixa de 5<br>')}</h4>
                             </div>
                         </div>
                         <div class="item-controls">
@@ -2140,9 +2165,11 @@
         function toggleCart() {
             const overlay = document.getElementById('cartOverlay');
             const sidebar = document.getElementById('cartSidebar');
+            const body = document.body;
             
             overlay.classList.toggle('active');
             sidebar.classList.toggle('active');
+            body.classList.toggle('no-scroll');
         }
 
         // Mobile menu functionality
@@ -2225,6 +2252,8 @@
                 title: 'Mystery Box - Camisolas de Jogo',
                 productTitle: 'Mystery Box - Camisolas de Jogo',
                 price: '€41,99',
+                originalPrice: '€81,99',
+                id: 'mystery-box-jogo',
                 description: 'Cada caixa contém uma camisola oficial de jogo de equipas portuguesas e internacionais.',
                 features: ['Camisola oficial de jogo', 'Equipas nacionais e internacionais', 'Qualidade premium'],
                 category: 'jogo'
@@ -2233,6 +2262,8 @@
                 title: 'Mystery Box - Camisolas de Treino',
                 productTitle: 'Mystery Box - Camisolas de Treino',
                 price: '€34,99',
+                originalPrice: '€49,99',
+                id: 'mystery-box-treino',
                 description: 'Cada caixa contém uma camisola oficial de treino de equipas portuguesas e internacionais.',
                 features: ['Camisola oficial de treino', 'Material técnico respirável', 'Design moderno'],
                 category: 'treino'
@@ -2240,7 +2271,9 @@
             tripla: {
                 title: 'Caixa Tripla - Camisolas de Jogo',
                 productTitle: 'Caixa Tripla - Camisolas de Jogo',
-                price: '€119,99',
+                price: '€109,99',
+                originalPrice: '€239,97',
+                id: 'mystery-box-tripla',
                 description: 'Caixa especial com 3 camisolas oficiais de jogo de diferentes equipas.',
                 features: ['3 camisolas oficiais', 'Equipas variadas', 'Valor especial'],
                 category: 'jogo'
@@ -2248,7 +2281,9 @@
             partilhar: {
                 title: 'Caixa de 5 para Partilhar - Camisolas de Jogo',
                 productTitle: 'Caixa de 5 para Partilhar',
-                price: '€189,99',
+                price: '€179,99',
+                originalPrice: '€399,95',
+                id: 'mystery-box-partilhar',
                 description: 'Caixa ideal para partilhar com amigos! 5 camisolas oficiais de jogo.',
                 features: ['5 camisolas oficiais', 'Perfeito para grupos', 'Máximo valor'],
                 category: 'jogo'
@@ -2272,10 +2307,33 @@
             // Atualizar título do produto
             document.getElementById('product-title').textContent = content.productTitle;
             
-            // Atualizar preço se houver elemento específico
+            // Atualizar preço atual
             const priceElement = document.querySelector('.price-current');
             if (priceElement) {
                 priceElement.textContent = content.price;
+            }
+            
+            // Atualizar preço original
+            const originalPriceElement = document.querySelector('.price-original');
+            if (originalPriceElement) {
+                originalPriceElement.textContent = content.originalPrice;
+            }
+            
+            // Atualizar sticky bar se existir
+            const stickyPriceCurrent = document.querySelector('.sticky-price-current');
+            if (stickyPriceCurrent) {
+                stickyPriceCurrent.textContent = content.price;
+            }
+            
+            const stickyPriceOriginal = document.querySelector('.sticky-price-original');
+            if (stickyPriceOriginal) {
+                stickyPriceOriginal.textContent = content.originalPrice;
+            }
+            
+            // Atualizar título na sticky bar
+            const stickyProductTitle = document.querySelector('.sticky-bar-content h3');
+            if (stickyProductTitle) {
+                stickyProductTitle.textContent = content.productTitle;
             }
         }
 
